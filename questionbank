@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Online Examination</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .guidelines ul {
+            list-style-position: inside;
+            text-align: left;
+            margin-left: 1.5rem;
+        }
+        .guidelines ul li {
+            margin-bottom: 0.75rem;
+        }
+        .question-palette-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .not-answered { background-color: #e5e7eb; color: #374151; }
+        .answered { background-color: #10b981; color: white; }
+        .marked-for-review { background-color: #6366f1; color: white; }
+        .current-question { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+
+    <div id="container" class="w-full max-w-6xl mx-auto p-4 md:p-8">
+
+        <!-- 0. Guidelines Screen -->
+        <div id="guidelines-screen" class="p-8 bg-white rounded-2xl shadow-xl">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">Before Exam Guidelines</h1>
+            <h2 class="text-xl font-semibold text-gray-700 mb-6 text-center">(Must Read & Accept)</h2>
+            <div class="guidelines text-gray-600 max-h-96 overflow-y-auto pr-4">
+                <ul class="list-disc space-y-3">
+                    <li>You must turn on your camera and microphone throughout the exam.</li>
+                    <li>You must be alone in the room — no other person should be visible or heard.</li>
+                    <li>Your face and hands must remain visible on camera at all times.</li>
+                    <li>No mobile phones, smartwatches, or books are allowed near your desk.</li>
+                    <li>You may not open any other tab, application, or window during the exam.</li>
+                    <li>Your screen, camera, and audio will be recorded and monitored for the entire duration.</li>
+                    <li>If you switch tabs, minimize the screen, or disconnect from Meet repeatedly, your exam may be auto-terminated or flagged.</li>
+                    <li>Any suspicious activity (background voice, second face, or external device use) will result in disqualification.</li>
+                    <li>The exam must be completed in the given time limit. No extra time will be provided.</li>
+                </ul>
+                <p class="font-bold mt-6">By clicking “I Agree”, you give consent for:</p>
+                <ul class="list-disc mt-2">
+                    <li>Camera and microphone access</li>
+                    <li>Live monitoring via Google Meet</li>
+                    <li>Screen and audio recording</li>
+                    <li>Data being used for exam verification purposes only</li>
+                </ul>
+            </div>
+            <div class="mt-8 pt-6 border-t flex flex-col items-center">
+                <label class="flex items-center text-lg">
+                    <input type="checkbox" id="agree-checkbox" class="h-5 w-5 mr-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    I have read and agree to follow all the above guidelines.
+                </label>
+                <button id="agree-btn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-12 rounded-lg hover:bg-blue-700 transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    Submit & Agree
+                </button>
+            </div>
+        </div>
+
+
+        <!-- 1. Permissions Screen -->
+        <div id="permissions-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Secure Exam Portal</h1>
+            <p class="text-gray-600 mb-6">This exam requires camera and microphone access for proctoring.</p>
+            <p class="text-sm text-gray-500 mb-8">Please grant permissions to continue.</p>
+            <button id="grant-permissions-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+                Grant Access
+            </button>
+            <p id="permissions-error" class="text-red-500 mt-4 hidden"></p>
+        </div>
+
+        <!-- 2. ID Verification Screen -->
+        <div id="id-verification-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Identity Verification</h2>
+            <p class="text-gray-600 mb-6">Please hold your government-issued photo ID clearly in front of the camera.</p>
+            <div class="relative w-full max-w-lg mx-auto mb-6 rounded-lg overflow-hidden shadow-inner border">
+                <video id="webcam-preview" autoplay playsinline class="w-full h-auto"></video>
+                <canvas id="id-canvas" class="hidden"></canvas>
+            </div>
+            <button id="capture-id-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors shadow-md">
+                Capture ID
+            </button>
+            <div id="id-capture-feedback" class="mt-4"></div>
+        </div>
+        
+        <!-- 3. Exam Screen -->
+        <div id="exam-screen" class="hidden p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow-xl">
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">SSC Combined Graduate Level Examination (Tier-I)</h1>
+                    <p class="text-gray-500">Candidate: John Doe (Roll: 123456)</p>
+                </div>
+                <div id="timer" class="mt-4 sm:mt-0 text-2xl font-bold text-red-600 bg-red-100 px-4 py-2 rounded-lg">60:00</div>
+            </header>
+            
+            <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="lg:col-span-3">
+                    <div id="question-container" class="bg-gray-50 p-6 rounded-lg">
+                        <!-- Question content will be dynamically inserted here -->
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button id="prev-question-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">Previous</button>
+                        <button id="mark-review-btn" class="bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-600">Mark for Review</button>
+                        <button id="next-question-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700">Next</button>
+                    </div>
+                </div>
+
+                <aside class="lg:col-span-1">
+                    <div class="bg-gray-800 p-4 rounded-lg text-white mb-6">
+                        <h4 class="font-semibold mb-2 text-center">Proctoring Active</h4>
+                        <div class="relative w-full aspect-w-4 aspect-h-3 rounded-md overflow-hidden bg-black">
+                            <video id="proctor-feed" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                        </div>
+                        <p class="text-xs text-center mt-2 text-gray-400">Your webcam and microphone are being recorded.</p>
+                    </div>
+                     <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-3 text-center text-gray-700">Question Palette</h4>
+                        <div id="question-palette" class="grid grid-cols-5 gap-2">
+                            <!-- Palette buttons will be dynamically inserted here -->
+                        </div>
+                    </div>
+                    <button id="submit-exam-btn" class="mt-6 w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md">
+                        Submit Exam
+                    </button>
+                </aside>
+            </main>
+        </div>
+
+        <!-- Blocking overlay for tab switch -->
+        <div id="tab-switch-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div class="text-center text-white p-12 rounded-lg">
+                <h2 class="text-4xl font-bold text-yellow-400 mb-4">Warning!</h2>
+                <p class="text-xl mb-2">You have switched away from the exam tab.</p>
+                <p class="text-lg">Returning to the exam is required immediately.</p>
+                <p id="tab-switch-count" class="mt-6 text-2xl font-bold text-red-500"></p>
+            </div>
+        </div>
+
+        <!-- Custom Confirmation Modal for Submission -->
+        <div id="confirm-submit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-lg shadow-xl text-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Confirm Submission</h3>
+                <p class="text-gray-600 mb-6">Are you sure you want to submit the exam?</p>
+                <div class="flex justify-center gap-4">
+                    <button id="cancel-submit-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-8 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button id="confirm-submit-btn" class="bg-green-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-green-700">Yes, Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const guidelinesScreen = document.getElementById('guidelines-screen');
+        const agreeCheckbox = document.getElementById('agree-checkbox');
+        const agreeBtn = document.getElementById('agree-btn');
+        const permissionsScreen = document.getElementById('permissions-screen');
+        const idVerificationScreen = document.getElementById('id-verification-screen');
+        const examScreen = document.getElementById('exam-screen');
+        const grantPermissionsBtn = document.getElementById('grant-permissions-btn');
+        const permissionsError = document.getElementById('permissions-error');
+        const webcamPreview = document.getElementById('webcam-preview');
+        const proctorFeed = document.getElementById('proctor-feed');
+        const captureIdBtn = document.getElementById('capture-id-btn');
+        const idCanvas = document.getElementById('id-canvas');
+        const idCaptureFeedback = document.getElementById('id-capture-feedback');
+        const timerEl = document.getElementById('timer');
+        const tabSwitchOverlay = document.getElementById('tab-switch-overlay');
+        const tabSwitchCountEl = document.getElementById('tab-switch-count');
+        const questionContainer = document.getElementById('question-container');
+        const questionPalette = document.getElementById('question-palette');
+        const prevQuestionBtn = document.getElementById('prev-question-btn');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const markReviewBtn = document.getElementById('mark-review-btn');
+        const submitExamBtn = document.getElementById('submit-exam-btn');
+        const confirmSubmitModal = document.getElementById('confirm-submit-modal');
+        const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
+        const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
+
+
+        // --- State and Config ---
+        let mediaStream;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recorderInterval;
+        let idCaptured = false;
+        const EXAM_DURATION_SECONDS = 60 * 60; // 60 minutes
+        const RECORDING_CHUNK_INTERVAL_MS = 20 * 1000; // 20 seconds
+        const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs"; // IMPORTANT: This is where you set the link
+        const CANDIDATE_ID = "CAND12345";
+        const EXAM_ID = "EXAM9876";
+        const MAX_TAB_SWITCHES = 2;
+        let tabSwitchCounter = 0;
+        let currentQuestionIndex = 0;
+        let timerInterval;
+
+
+        // --- Question Bank ---
+        const questionBank = [
+            {
+                id: 1,
+                text: "Who was the first person to step on the moon?",
+                options: ["Neil Armstrong", "Buzz Aldrin", "Michael Collins", "Yuri Gagarin"],
+                answer: "Neil Armstrong",
+                userAnswer: null,
+                status: "not-answered" // not-answered, answered, marked-for-review
+            },
+            {
+                id: 2,
+                text: "What is the capital of France?",
+                options: ["London", "Berlin", "Madrid", "Paris"],
+                answer: "Paris",
+                userAnswer: null,
+                status: "not-answered"
+            },
+            {
+                id: 3,
+                text: "What is 2 + 2?",
+                options: ["3", "4", "5", "6"],
+                answer: "4",
+                userAnswer: null,
+                status: "not-answered"
+            },
+            // Add more questions here... up to 10 for this demo
+            ...Array.from({ length: 7 }, (_, i) => ({
+                id: i + 4,
+                text: `This is placeholder question number ${i + 4}. What is the correct option?`,
+                options: [`Option A${i}`, `Option B${i}`, `Option C${i}`, `Option D${i}`],
+                answer: `Option A${i}`,
+                userAnswer: null,
+                status: "not-answered"
+            }))
+        ];
+
+
+        // --- Event Listeners ---
+        agreeCheckbox.addEventListener('change', () => { agreeBtn.disabled = !agreeCheckbox.checked; });
+        agreeBtn.addEventListener('click', () => {
+            guidelinesScreen.classList.add('hidden');
+            permissionsScreen.classList.remove('hidden');
+        });
+        grantPermissionsBtn.addEventListener('click', requestPermissions);
+        captureIdBtn.addEventListener('click', captureId);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        prevQuestionBtn.addEventListener('click', showPreviousQuestion);
+        nextQuestionBtn.addEventListener('click', showNextQuestion);
+        markReviewBtn.addEventListener('click', markQuestionForReview);
+        
+        // Submission flow listeners
+        submitExamBtn.addEventListener('click', () => { confirmSubmitModal.classList.remove('hidden'); });
+        cancelSubmitBtn.addEventListener('click', () => { confirmSubmitModal.classList.add('hidden'); });
+        confirmSubmitBtn.addEventListener('click', () => {
+            confirmSubmitModal.classList.add('hidden');
+            endExam("Exam submitted successfully by candidate.");
+        });
+
+        // --- Core Functions ---
+
+        // 1. Request Camera and Microphone Permissions
+        async function requestPermissions() {
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true });
+                permissionsScreen.classList.add('hidden');
+                idVerificationScreen.classList.remove('hidden');
+                webcamPreview.srcObject = mediaStream;
+            } catch (err) {
+                permissionsError.textContent = `Error: ${err.message}. Permissions are mandatory.`;
+                permissionsError.classList.remove('hidden');
+            }
+        }
+
+        // 2. Capture Photo ID
+        function captureId() {
+            idCanvas.width = webcamPreview.videoWidth;
+            idCanvas.height = webcamPreview.videoHeight;
+            const context = idCanvas.getContext('2d');
+            context.drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
+            idCanvas.toBlob(blob => console.log("ID Image captured, size:", blob.size), 'image/jpeg');
+            idCaptured = true;
+            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID Captured Successfully!</p>
+                <button id="start-exam-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed to Exam</button>`;
+            document.getElementById('start-exam-btn').addEventListener('click', startExam);
+            captureIdBtn.disabled = true;
+        }
+
+        // 3. Start the Exam
+        function startExam() {
+            idVerificationScreen.classList.add('hidden');
+            examScreen.classList.remove('hidden');
+            proctorFeed.srcObject = mediaStream;
+            const meetUrl = `${PROCTOR_MEET_LINK}?examId=${EXAM_ID}&cand=${CANDIDATE_ID}`;
+            window.open(meetUrl, 'ProctoringSession', 'width=800,height=600');
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            document.addEventListener('copy', event => event.preventDefault());
+            startTimer(EXAM_DURATION_SECONDS);
+            startRecording();
+            renderQuestionPalette();
+            renderQuestion(currentQuestionIndex);
+        }
+
+        // 4. Question Rendering and Navigation
+        function renderQuestion(index) {
+            const question = questionBank[index];
+            questionContainer.innerHTML = `
+                <h3 class="font-semibold text-lg mb-2">Question ${index + 1} of ${questionBank.length}</h3>
+                <p class="text-gray-700 mb-4">${question.text}</p>
+                <div class="space-y-3">
+                    ${question.options.map((opt, i) => `
+                        <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <input type="radio" name="q${question.id}" value="${opt}" class="mr-3" ${question.userAnswer === opt ? 'checked' : ''}>
+                            ${opt}
+                        </label>
+                    `).join('')}
+                </div>`;
+            questionContainer.querySelectorAll(`input[name="q${question.id}"]`).forEach(input => {
+                input.addEventListener('change', (e) => {
+                    question.userAnswer = e.target.value;
+                    if (question.status !== 'marked-for-review') question.status = 'answered';
+                    renderQuestionPalette();
+                });
+            });
+            prevQuestionBtn.disabled = index === 0;
+            nextQuestionBtn.disabled = index === questionBank.length - 1;
+            updatePaletteHighlight();
+        }
+
+        function renderQuestionPalette() {
+            questionPalette.innerHTML = '';
+            questionBank.forEach((q, index) => {
+                const button = document.createElement('button');
+                button.textContent = index + 1;
+                button.className = `question-palette-btn ${q.status}`;
+                button.addEventListener('click', () => {
+                    currentQuestionIndex = index;
+                    renderQuestion(currentQuestionIndex);
+                });
+                questionPalette.appendChild(button);
+            });
+            updatePaletteHighlight();
+        }
+        
+        function updatePaletteHighlight() {
+            Array.from(questionPalette.children).forEach((btn, index) => {
+                btn.classList.toggle('current-question', index === currentQuestionIndex);
+            });
+        }
+
+        function showPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion(currentQuestionIndex);
+            }
+        }
+        
+        function showNextQuestion() {
+            if (currentQuestionIndex < questionBank.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion(currentQuestionIndex);
+            }
+        }
+        
+        function markQuestionForReview() {
+            questionBank[currentQuestionIndex].status = 'marked-for-review';
+            renderQuestionPalette();
+            if (currentQuestionIndex < questionBank.length - 1) {
+                showNextQuestion();
+            }
+        }
+        
+        // 5. Countdown Timer
+        function startTimer(duration) {
+            let timer = duration;
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timer / 60);
+                const seconds = timer % 60;
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    endExam("Time's up!");
+                }
+            }, 1000);
+        }
+
+        // 6. Webcam & Mic Recording
+        function startRecording() {
+            if (!mediaStream) return;
+
+            const mimeTypes = ['video/webm; codecs=vp9,opus', 'video/webm; codecs=vp8,opus', 'video/webm'];
+            const supportedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+            if (!supportedMimeType) {
+                console.error("No supported MIME type found for MediaRecorder.");
+                return;
+            }
+
+            try {
+                mediaRecorder = new MediaRecorder(mediaStream, { mimeType: supportedMimeType });
+            } catch (e) {
+                console.error("Exception while creating MediaRecorder:", e);
+                return;
+            }
+
+            mediaRecorder.ondataavailable = event => {
+                if (event.data && event.data.size > 0) recordedChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                uploadChunk();
+                recordedChunks = []; // Reset chunks for the next interval
+            };
+            
+            mediaRecorder.onerror = event => console.error(`MediaRecorder error: ${event.error}`);
+
+            // Start recording immediately
+            try {
+                mediaRecorder.start();
+            } catch (e) {
+                console.error("Initial MediaRecorder start failed:", e);
+                return;
+            }
+
+            // Set up a stable interval to create chunks
+            recorderInterval = setInterval(() => {
+                if (mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                }
+                // A brief timeout to allow the stop event to process before starting again
+                setTimeout(() => {
+                    if (mediaRecorder.state === "inactive" && !examScreen.classList.contains('hidden')) {
+                         try {
+                            mediaRecorder.start();
+                        } catch(e) {
+                            console.error("Error restarting MediaRecorder in interval:", e);
+                        }
+                    }
+                }, 100);
+            }, RECORDING_CHUNK_INTERVAL_MS);
+        }
+
+        // 7. Upload Recorded Chunk (Simulated)
+        function uploadChunk() {
+            if (recordedChunks.length === 0) return;
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            console.log(`--- SIMULATING CHUNK UPLOAD --- Size: ${blob.size} bytes.`);
+        }
+
+        // 8. Anti-Cheating: Detect Tab/Window Switching
+        function handleVisibilityChange() {
+             if (document.hidden && !examScreen.classList.contains('hidden')) {
+                tabSwitchCounter++;
+                tabSwitchCountEl.textContent = `Violations: ${tabSwitchCounter} of ${MAX_TAB_SWITCHES}`;
+                tabSwitchOverlay.classList.remove('hidden');
+                if (tabSwitchCounter > MAX_TAB_SWITCHES) endExam("Exam terminated due to multiple tab switches.");
+            } else {
+                tabSwitchOverlay.classList.add('hidden');
+            }
+        }
+        
+        // 9. Prepare and Log Submission Data
+        function prepareAndLogSubmission() {
+            const submissionPayload = {
+                candidateId: CANDIDATE_ID,
+                examId: EXAM_ID,
+                submissionTime: new Date().toISOString(),
+                answers: questionBank.map(q => ({
+                    questionId: q.id,
+                    answer: q.userAnswer
+                }))
+            };
+
+            console.log('--- SIMULATING EXAM SUBMISSION TO SERVER ---');
+            console.log('In a real application, this data would be sent to the backend for grading and storage.');
+            console.log('Payload:', submissionPayload);
+        }
+
+        // 10. End the Exam
+        function endExam(reason) {
+            // Log the final answers before ending the session
+            if (reason.includes("submitted")) {
+                prepareAndLogSubmission();
+            }
+
+            clearInterval(timerInterval);
+            clearInterval(recorderInterval); // Stop the recording interval
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+
+            const endScreen = document.createElement('div');
+            endScreen.className = 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50';
+            endScreen.innerHTML = `<div class="text-center p-12 bg-white rounded-lg shadow-xl">
+                <h1 class="text-3xl font-bold text-gray-800">Exam Finished</h1>
+                <p class="text-gray-600 mt-4">${reason}</p>
+            </div>`;
+            document.body.innerHTML = '';
+            document.body.appendChild(endScreen);
+
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+        }
+    </script>
+
+</body>
+</html>
