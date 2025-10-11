@@ -370,8 +370,8 @@
         let examDurationSeconds = 3600;
         const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs";
         const MAX_VIOLATIONS = 5;
-        const AUDIO_THRESHOLD = 60;
-        const SUSTAINED_NOISE_LIMIT = 2;
+        const AUDIO_THRESHOLD = 75; // FIX: Increased threshold to ignore quieter sounds
+        const SUSTAINED_NOISE_LIMIT = 3; // FIX: Require noise for a longer duration
         const ADMIN_PASSWORD = "admin123";
         let violationCounter = 0;
         let currentQuestionIndex = 0;
@@ -641,6 +641,7 @@
                 ? ((question.userAnswer || '').trim() ? 'answered' : 'not-answered')
                 : 'marked-for-review';
             renderQuestion(currentQuestionIndex);
+            renderQuestionPalette(); // FIX: Explicitly re-render the palette
         }
 
         function startTimer(duration) {
@@ -724,7 +725,7 @@
                         resolveViolation('sound');
                     }
                 }
-            }, 2000);
+            }, 1500); 
         }
         
         function handleVisibilityChange() {
@@ -750,6 +751,14 @@
                 violationMessage.textContent = message;
                 violationCountMessage.textContent = `Violations: ${violationCounter} of ${MAX_VIOLATIONS}`;
                 violationOverlay.classList.remove('hidden');
+                
+                if (type === 'sound') {
+                    setTimeout(() => {
+                        if (violationOverlay.dataset.violationType === 'sound') {
+                           resolveViolation('sound');
+                        }
+                    }, 4000);
+                }
             }
             if (violationCounter >= MAX_VIOLATIONS) endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
         }
