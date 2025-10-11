@@ -435,17 +435,11 @@
 
         function handleLogin(event) {
             const student = event.target.dataset.student;
-            const config = getExamConfig();
-            examDurationSeconds = config.duration * 60;
-            const bank9 = config.questionBankClass9;
-            const bank10 = config.questionBankClass10;
 
             if (student === 'siril') {
                 currentStudent = { name: 'Siril', class: '9', id: 'SIRIL09' };
-                questionBank = bank9.questions;
             } else {
                 currentStudent = { name: 'Sam', class: '10', id: 'SAM10' };
-                questionBank = bank10.questions;
             }
             loginScreen.classList.add('hidden');
             guidelinesScreen.classList.remove('hidden');
@@ -503,8 +497,12 @@
             examScreen.classList.remove('hidden');
             proctorFeed.srcObject = mediaStream;
 
+            // --- LOAD LATEST CONFIG ---
             const config = getExamConfig();
+            examDurationSeconds = config.duration * 60;
             const subject = currentStudent.class === '9' ? config.questionBankClass9.subject : config.questionBankClass10.subject;
+            questionBank = currentStudent.class === '9' ? config.questionBankClass9.questions : config.questionBankClass10.questions;
+            // --- END LOAD LATEST CONFIG ---
 
             examHeaderInfo.innerHTML = `
                 <h1 class="text-2xl font-bold text-gray-800">Annual Examination - ${subject}</h1>
@@ -512,7 +510,6 @@
             `;
             
             enterFullScreen();
-            // ... other security listeners
              document.addEventListener('contextmenu', event => event.preventDefault());
             document.addEventListener('copy', event => event.preventDefault());
             document.addEventListener('keydown', (e) => {
