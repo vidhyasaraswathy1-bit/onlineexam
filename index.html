@@ -10,19 +10,14 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f2f5;
-            /* Disable text selection throughout the page */
             -webkit-user-select: none; /* Safari */
             -moz-user-select: none; /* Firefox */
             -ms-user-select: none; /* IE10+/Edge */
             user-select: none; /* Standard */
         }
-        .guidelines ul {
+        .guidelines ul, .admin-question-list ul {
             list-style-position: inside;
             text-align: left;
-            margin-left: 1.5rem;
-        }
-        .guidelines ul li {
-            margin-bottom: 0.75rem;
         }
         .question-palette-btn {
             width: 40px;
@@ -38,24 +33,25 @@
         .answered { background-color: #10b981; color: white; }
         .marked-for-review { background-color: #6366f1; color: white; }
         .current-question { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
-        textarea:focus {
+        textarea:focus, input:focus {
              box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
              border-color: #3b82f6;
              outline: none;
         }
-        /* Allow text selection only in textareas */
-        textarea {
+        textarea, input[type="password"], input[type="number"] {
             -webkit-user-select: auto;
             -moz-user-select: auto;
             -ms-user-select: auto;
             user-select: auto;
         }
-        /* Hide content when printing */
         @media print {
-          body {
-            visibility: hidden;
-          }
+          body { visibility: hidden; }
         }
+        /* Styling for the admin panel tabs */
+        .admin-tab { cursor: pointer; padding: 0.75rem 1.5rem; border-bottom: 3px solid transparent; }
+        .admin-tab.active { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
+        .admin-tab-content { display: none; }
+        .admin-tab-content.active { display: block; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gray-100">
@@ -87,25 +83,57 @@
 
         <!-- ADMIN: Panel -->
         <div id="admin-panel-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl">
-            <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Panel: Question Management</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">Class 9 (Science) Questions</h2>
-                    <p class="text-sm text-gray-500 mb-2">Enter one question per line.</p>
-                    <textarea id="admin-questions-class9" rows="10" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="e.g., Explain the process of photosynthesis in plants."></textarea>
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+            <!-- Admin Tabs -->
+            <div class="flex border-b mb-6">
+                <div id="config-tab" class="admin-tab active" onclick="switchAdminTab('config')">Exam Configuration</div>
+                <div id="monitoring-tab" class="admin-tab" onclick="switchAdminTab('monitoring')">Live Monitoring & Results</div>
+            </div>
+
+            <!-- Tab Content: Configuration -->
+            <div id="config-content" class="admin-tab-content active">
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+                    <label for="exam-duration" class="block text-lg font-semibold mb-2">Exam Duration (minutes)</label>
+                    <input type="number" id="exam-duration" class="w-full p-3 border border-gray-300 rounded-lg" value="60">
                 </div>
-                <div>
-                    <h2 class="text-xl font-semibold mb-2">Class 10 (Mathematics) Questions</h2>
-                    <p class="text-sm text-gray-500 mb-2">Enter one question per line.</p>
-                    <textarea id="admin-questions-class10" rows="10" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="e.g., Solve the quadratic equation: x² - 5x + 6 = 0."></textarea>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2">Class 9 (Science) Questions</h2>
+                        <div id="admin-questions-list-class9" class="admin-question-list border rounded-lg p-3 min-h-[200px] mb-2 bg-gray-50"></div>
+                        <textarea id="admin-new-question-class9" class="w-full p-2 border rounded-md" placeholder="Type new text question here..."></textarea>
+                        <div class="flex gap-2 mt-2">
+                            <button class="add-text-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" data-target="9">Add Text</button>
+                            <input type="file" accept="image/*" class="hidden" id="image-upload-9">
+                            <label for="image-upload-9" class="add-image-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 cursor-pointer">Add Image</label>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold mb-2">Class 10 (Mathematics) Questions</h2>
+                        <div id="admin-questions-list-class10" class="admin-question-list border rounded-lg p-3 min-h-[200px] mb-2 bg-gray-50"></div>
+                        <textarea id="admin-new-question-class10" class="w-full p-2 border rounded-md" placeholder="Type new text question here..."></textarea>
+                         <div class="flex gap-2 mt-2">
+                            <button class="add-text-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600" data-target="10">Add Text</button>
+                            <input type="file" accept="image/*" class="hidden" id="image-upload-10">
+                            <label for="image-upload-10" class="add-image-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 cursor-pointer">Add Image</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 text-center">
+                    <button id="admin-save-btn" class="bg-indigo-600 text-white font-bold py-3 px-12 rounded-lg hover:bg-indigo-700 transition-all">Save All Settings & Questions</button>
+                    <p id="admin-save-feedback" class="text-green-600 mt-4 font-semibold"></p>
                 </div>
             </div>
-            <div class="mt-6 text-center">
-                <button id="admin-save-btn" class="bg-blue-600 text-white font-bold py-3 px-12 rounded-lg hover:bg-blue-700">Save Questions</button>
-                <p id="admin-save-feedback" class="text-green-600 mt-4 font-semibold"></p>
+
+            <!-- Tab Content: Monitoring -->
+            <div id="monitoring-content" class="admin-tab-content">
+                <p class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">This dashboard simulates live monitoring by reading data saved by the student's browser. Data updates every 5 seconds. In a real application, this would be powered by a server.</p>
+                <div id="student-monitoring-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Student cards will be injected here -->
+                </div>
             </div>
         </div>
 
+        <!-- All other screens -->
         <!-- 1. Guidelines Screen -->
         <div id="guidelines-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">Before Exam Guidelines</h1>
@@ -182,12 +210,12 @@
                 <div id="exam-header-info">
                     <!-- Student-specific info will be injected here -->
                 </div>
-                <div id="timer" class="mt-4 sm:mt-0 text-2xl font-bold text-red-600 bg-red-100 px-4 py-2 rounded-lg">60:00</div>
+                <div id="timer" class="mt-4 sm:mt-0 text-2xl font-bold text-red-600 bg-red-100 px-4 py-2 rounded-lg">--:--</div>
             </header>
             
             <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div class="lg:col-span-3">
-                    <div id="question-container" class="bg-gray-50 p-6 rounded-lg">
+                    <div id="question-container" class="bg-gray-50 p-6 rounded-lg min-h-[400px]">
                         <!-- Question content will be dynamically inserted here -->
                     </div>
                     <div class="flex justify-between mt-6">
@@ -247,6 +275,16 @@
                 </div>
             </div>
         </div>
+        
+        <!-- View Answers Modal -->
+        <div id="view-answers-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+             <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
+                 <h3 id="answers-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Student Answers</h3>
+                 <div id="answers-modal-content" class="max-h-[70vh] overflow-y-auto pr-4"></div>
+                 <button id="close-answers-modal-btn" class="mt-6 bg-gray-800 text-white font-bold py-2 px-8 rounded-lg hover:bg-black">Close</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -283,67 +321,67 @@
         const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
         const examHeaderInfo = document.getElementById('exam-header-info');
         const violationCounterEl = document.getElementById('violation-counter');
+        const viewAnswersModal = document.getElementById('view-answers-modal');
+        const closeAnswersModalBtn = document.getElementById('close-answers-modal-btn');
+        const answersModalTitle = document.getElementById('answers-modal-title');
+        const answersModalContent = document.getElementById('answers-modal-content');
+
         // Admin Elements
         const adminLoginScreen = document.getElementById('admin-login-screen');
         const adminPanelScreen = document.getElementById('admin-panel-screen');
         const adminPasswordInput = document.getElementById('admin-password');
         const adminLoginBtn = document.getElementById('admin-login-btn');
         const adminLoginError = document.getElementById('admin-login-error');
-        const adminQuestionsClass9 = document.getElementById('admin-questions-class9');
-        const adminQuestionsClass10 = document.getElementById('admin-questions-class10');
+        const examDurationInput = document.getElementById('exam-duration');
         const adminSaveBtn = document.getElementById('admin-save-btn');
         const adminSaveFeedback = document.getElementById('admin-save-feedback');
-
+        const studentMonitoringGrid = document.getElementById('student-monitoring-grid');
 
         // --- State and Config ---
         let currentStudent = {};
         let questionBank = [];
         let mediaStream, mediaRecorder, recorderInterval, audioContext, audioSource, audioAnalyser;
         let recordedChunks = [];
-        const EXAM_DURATION_SECONDS = 60 * 60; // 60 minutes
-        const RECORDING_CHUNK_INTERVAL_MS = 20 * 1000;
+        let examDurationSeconds = 60 * 60; // Default
         const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs";
-        const MAX_VIOLATIONS = 5; // Increased to 5
-        const AUDIO_THRESHOLD = 60; // Increased sensitivity slightly for ambient noise
-        const SUSTAINED_NOISE_LIMIT = 2; // Requires 2 consecutive checks of loud noise
+        const MAX_VIOLATIONS = 5;
+        const AUDIO_THRESHOLD = 60;
+        const SUSTAINED_NOISE_LIMIT = 2;
         const ADMIN_PASSWORD = "admin123"; 
         let violationCounter = 0;
         let currentQuestionIndex = 0;
-        let timerInterval, monitoringInterval;
+        let timerInterval, monitoringInterval, adminMonitoringInterval;
+        let adminTempQuestions = { 9: [], 10: [] };
+        let isAdminConfigDirty = false;
 
-        // State flags for violation tracking to prevent repeated triggers
         let isCameraWarningActive = false;
         let isSoundWarningActive = false;
         let isTabSwitchWarningActive = false;
         let sustainedSoundCount = 0;
 
-
         // --- Default Question Banks ---
         const defaultQuestionBankClass9 = {
             subject: "Science",
             questions: [
-                { id: 901, text: "Explain the process of photosynthesis in plants.", userAnswer: "", status: "not-answered" },
-                { id: 902, text: "What is Newton's First Law of Motion? Provide a real-world example.", userAnswer: "", status: "not-answered" },
-                { id: 903, text: "Describe the structure of a human cell with a labeled diagram.", userAnswer: "", status: "not-answered" },
-                { id: 904, text: "What are the differences between acids and bases?", userAnswer: "", status: "not-answered" },
-                { id: 905, text: "Explain the water cycle.", userAnswer: "", status: "not-answered" },
+                { id: 901, type: 'text', content: "Explain the process of photosynthesis in plants.", userAnswer: "", status: "not-answered" },
             ]
         };
-
         const defaultQuestionBankClass10 = {
             subject: "Mathematics",
             questions: [
-                { id: 1001, text: "Solve the quadratic equation: x² - 5x + 6 = 0.", userAnswer: "", status: "not-answered" },
-                { id: 1002, text: "Prove that the sum of angles in a triangle is 180 degrees.", userAnswer: "", status: "not-answered" },
-                { id: 1003, text: "If the radius of a circle is 7cm, find its area and circumference.", userAnswer: "", status: "not-answered" },
-                { id: 1004, text: "Explain the concept of probability with an example of rolling a dice.", userAnswer: "", status: "not-answered" },
-                { id: 1005, text: "What is the Pythagorean theorem? Use it to solve for the hypotenuse of a right-angled triangle with sides 3cm and 4cm.", userAnswer: "", status: "not-answered" },
+                { id: 1001, type: 'text', content: "Solve the quadratic equation: x² - 5x + 6 = 0.", userAnswer: "", status: "not-answered" },
             ]
         };
         
         // --- Event Listeners ---
         window.addEventListener('load', handleRouting);
         window.addEventListener('hashchange', handleRouting);
+        window.addEventListener('beforeunload', (event) => {
+            if (isAdminConfigDirty) {
+                event.preventDefault();
+                event.returnValue = ''; // Required for modern browsers
+            }
+        });
 
         document.querySelectorAll('.student-login-btn').forEach(btn => btn.addEventListener('click', handleLogin));
         agreeCheckbox.addEventListener('change', () => { agreeBtn.disabled = !agreeCheckbox.checked; });
@@ -364,38 +402,50 @@
             confirmSubmitModal.classList.add('hidden');
             endExam("Exam submitted successfully.");
         });
+        closeAnswersModalBtn.addEventListener('click', () => viewAnswersModal.classList.add('hidden'));
+
         // Admin Listeners
         adminLoginBtn.addEventListener('click', handleAdminLogin);
         adminSaveBtn.addEventListener('click', handleAdminSave);
+        examDurationInput.addEventListener('input', () => setAdminDirtyState(true));
+        document.querySelectorAll('.add-text-btn').forEach(btn => btn.addEventListener('click', handleAddTextQuestion));
+        document.getElementById('image-upload-9').addEventListener('change', (e) => handleImageUpload(e, 9));
+        document.getElementById('image-upload-10').addEventListener('change', (e) => handleImageUpload(e, 10));
 
         // --- Core Functions ---
         
         function handleRouting() {
             const hash = window.location.hash;
+            // Hide all screens initially
+            loginScreen.classList.add('hidden');
+            guidelinesScreen.classList.add('hidden');
+            permissionsScreen.classList.add('hidden');
+            idVerificationScreen.classList.add('hidden');
+            preExamLobbyScreen.classList.add('hidden');
+            examScreen.classList.add('hidden');
+            adminLoginScreen.classList.add('hidden');
+            adminPanelScreen.classList.add('hidden');
+
             if (hash === '#admin') {
-                loginScreen.classList.add('hidden');
-                adminPanelScreen.classList.add('hidden');
                 adminLoginScreen.classList.remove('hidden');
             } else {
-                adminLoginScreen.classList.add('hidden');
-                adminPanelScreen.classList.add('hidden');
                 loginScreen.classList.remove('hidden');
             }
         }
 
         function handleLogin(event) {
             const student = event.target.dataset.student;
-            const storedBank9 = JSON.parse(localStorage.getItem('questionBankClass9'));
-            const storedBank10 = JSON.parse(localStorage.getItem('questionBankClass10'));
+            const config = getExamConfig();
+            examDurationSeconds = config.duration * 60;
+            const bank9 = config.questionBankClass9;
+            const bank10 = config.questionBankClass10;
 
             if (student === 'siril') {
                 currentStudent = { name: 'Siril', class: '9', id: 'SIRIL09' };
-                const questionData = storedBank9 || defaultQuestionBankClass9;
-                questionBank = questionData.questions;
+                questionBank = bank9.questions;
             } else {
                 currentStudent = { name: 'Sam', class: '10', id: 'SAM10' };
-                const questionData = storedBank10 || defaultQuestionBankClass10;
-                questionBank = questionData.questions;
+                questionBank = bank10.questions;
             }
             loginScreen.classList.add('hidden');
             guidelinesScreen.classList.remove('hidden');
@@ -403,12 +453,28 @@
 
         async function requestPermissions() {
             try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true });
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                permissionsError.classList.add('hidden');
                 permissionsScreen.classList.add('hidden');
                 idVerificationScreen.classList.remove('hidden');
                 webcamPreview.srcObject = mediaStream;
+                
+                // Initialize audio analysis
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioSource = audioContext.createMediaStreamSource(mediaStream);
+                audioAnalyser = audioContext.createAnalyser();
+                audioAnalyser.fftSize = 256;
+                audioSource.connect(audioAnalyser);
+
             } catch (err) {
-                permissionsError.textContent = `Error: ${err.message}. Permissions are mandatory.`;
+                console.error("Permissions error:", err);
+                let errorMessage = "Permissions were denied. Camera and microphone are required for this exam.";
+                if (err.name === "NotAllowedError") {
+                    errorMessage = "You have denied camera/microphone permissions. Please enable them in your browser settings and refresh the page.";
+                } else if (err.name === "NotFoundError") {
+                    errorMessage = "No camera or microphone was found on your device. Please connect them and try again.";
+                }
+                permissionsError.textContent = errorMessage;
                 permissionsError.classList.remove('hidden');
             }
         }
@@ -418,9 +484,10 @@
             idCanvas.height = webcamPreview.videoHeight;
             const context = idCanvas.getContext('2d');
             context.drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
-            idCanvas.toBlob(blob => console.log("ID Image captured, size:", blob.size), 'image/jpeg');
-            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID Captured Successfully!</p>
-                <button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed to Final Step</button>`;
+            // In a real app, this image data would be uploaded.
+            console.log("ID Captured"); 
+            
+            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID captured successfully!</p><button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed</button>`;
             document.getElementById('proceed-to-lobby-btn').addEventListener('click', showLobby);
             captureIdBtn.disabled = true;
         }
@@ -428,13 +495,7 @@
         function showLobby() {
             idVerificationScreen.classList.add('hidden');
             preExamLobbyScreen.classList.remove('hidden');
-
-            const subject = currentStudent.class === '9' 
-                ? (JSON.parse(localStorage.getItem('questionBankClass9'))?.subject || defaultQuestionBankClass9.subject)
-                : (JSON.parse(localStorage.getItem('questionBankClass10'))?.subject || defaultQuestionBankClass10.subject);
-            
-            const meetUrl = `${PROCTOR_MEET_LINK}?examId=${subject.toUpperCase()}&cand=${currentStudent.id}`;
-            window.open(meetUrl, 'ProctoringSession', 'width=800,height=600');
+            window.open(PROCTOR_MEET_LINK, '_blank', 'noopener,noreferrer');
         }
 
         function startExam() {
@@ -442,48 +503,48 @@
             examScreen.classList.remove('hidden');
             proctorFeed.srcObject = mediaStream;
 
-            const subject = currentStudent.class === '9' 
-                ? (JSON.parse(localStorage.getItem('questionBankClass9'))?.subject || defaultQuestionBankClass9.subject)
-                : (JSON.parse(localStorage.getItem('questionBankClass10'))?.subject || defaultQuestionBankClass10.subject);
+            const config = getExamConfig();
+            const subject = currentStudent.class === '9' ? config.questionBankClass9.subject : config.questionBankClass10.subject;
 
             examHeaderInfo.innerHTML = `
                 <h1 class="text-2xl font-bold text-gray-800">Annual Examination - ${subject}</h1>
                 <p class="text-gray-500">Candidate: ${currentStudent.name} (Class: ${currentStudent.class})</p>
             `;
             
-            // Security Enhancements
             enterFullScreen();
-            document.addEventListener('contextmenu', event => event.preventDefault());
+            // ... other security listeners
+             document.addEventListener('contextmenu', event => event.preventDefault());
             document.addEventListener('copy', event => event.preventDefault());
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'PrintScreen') {
-                    e.preventDefault();
-                    flashScreenshotWarning();
-                }
-                if (e.ctrlKey && e.key === 'p') {
-                    e.preventDefault();
-                }
-                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
-                    e.preventDefault();
-                }
+                if (e.key === 'PrintScreen') { e.preventDefault(); flashScreenshotWarning(); }
+                if (e.ctrlKey && e.key === 'p') { e.preventDefault(); }
+                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) { e.preventDefault(); }
             });
 
-
-            startTimer(EXAM_DURATION_SECONDS);
+            updateStudentStatus('In Progress');
+            startTimer(examDurationSeconds);
             startRecording();
             startMonitoring();
             renderQuestionPalette();
             renderQuestion(currentQuestionIndex);
         }
-
+        
         function renderQuestion(index) {
+            currentQuestionIndex = index;
             const question = questionBank[index];
+            let questionContentHTML = '';
+            if (question.type === 'image') {
+                questionContentHTML = `<img src="${question.content}" alt="Question Image" class="max-w-full h-auto rounded-lg mx-auto">`;
+            } else {
+                questionContentHTML = `<p class="text-gray-700 mb-4 whitespace-pre-wrap">${question.content}</p>`;
+            }
+
             questionContainer.innerHTML = `
                 <h3 class="font-semibold text-lg mb-2">Question ${index + 1} of ${questionBank.length}</h3>
-                <p class="text-gray-700 mb-4">${question.text}</p>
+                ${questionContentHTML}
                 <div class="mt-4">
                     <label for="answer-text" class="block text-sm font-medium text-gray-700 mb-2">Your Answer:</label>
-                    <textarea id="answer-text" rows="10" class="w-full p-3 border border-gray-300 rounded-lg">${question.userAnswer}</textarea>
+                    <textarea id="answer-text" rows="8" class="w-full p-3 border border-gray-300 rounded-lg">${question.userAnswer || ''}</textarea>
                 </div>`;
             
             const textarea = document.getElementById('answer-text');
@@ -499,50 +560,71 @@
 
             prevQuestionBtn.disabled = index === 0;
             nextQuestionBtn.disabled = index === questionBank.length - 1;
+            
+            if (question.status === 'marked-for-review') {
+                markReviewBtn.textContent = 'Unmark';
+                markReviewBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+                markReviewBtn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+            } else {
+                markReviewBtn.textContent = 'Mark for Review';
+                markReviewBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+                markReviewBtn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
+            }
             updatePaletteHighlight();
         }
 
         function renderQuestionPalette() {
             questionPalette.innerHTML = '';
             questionBank.forEach((q, index) => {
-                const button = document.createElement('button');
-                button.textContent = index + 1;
-                button.className = `question-palette-btn ${q.status}`;
-                button.addEventListener('click', () => {
-                    currentQuestionIndex = index;
-                    renderQuestion(currentQuestionIndex);
+                const btn = document.createElement('button');
+                btn.textContent = index + 1;
+                btn.className = 'question-palette-btn';
+                btn.dataset.index = index;
+                
+                if (q.status === 'answered') {
+                    btn.classList.add('answered');
+                } else if (q.status === 'marked-for-review') {
+                    btn.classList.add('marked-for-review');
+                } else {
+                    btn.classList.add('not-answered');
+                }
+                
+                btn.addEventListener('click', () => {
+                    renderQuestion(index);
                 });
-                questionPalette.appendChild(button);
+                questionPalette.appendChild(btn);
             });
             updatePaletteHighlight();
         }
-        
+
         function updatePaletteHighlight() {
-            Array.from(questionPalette.children).forEach((btn, index) => {
-                btn.classList.toggle('current-question', index === currentQuestionIndex);
+            document.querySelectorAll('.question-palette-btn').forEach(btn => {
+                btn.classList.toggle('current-question', parseInt(btn.dataset.index) === currentQuestionIndex);
             });
         }
-
+        
         function showPreviousQuestion() {
             if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                renderQuestion(currentQuestionIndex);
+                renderQuestion(currentQuestionIndex - 1);
             }
         }
-        
+
         function showNextQuestion() {
             if (currentQuestionIndex < questionBank.length - 1) {
-                currentQuestionIndex++;
-                renderQuestion(currentQuestionIndex);
+                renderQuestion(currentQuestionIndex + 1);
             }
         }
-        
+
         function markQuestionForReview() {
-            questionBank[currentQuestionIndex].status = 'marked-for-review';
-            renderQuestionPalette();
-            if (currentQuestionIndex < questionBank.length - 1) {
-                showNextQuestion();
+            const question = questionBank[currentQuestionIndex];
+            if (question.status === 'marked-for-review') {
+                // Unmark it
+                question.status = (question.userAnswer || '').trim() !== '' ? 'answered' : 'not-answered';
+            } else {
+                question.status = 'marked-for-review';
             }
+            renderQuestion(currentQuestionIndex); // Re-render to update button text
+            renderQuestionPalette(); // Re-render palette to update color
         }
         
         function startTimer(duration) {
@@ -550,85 +632,117 @@
             timerInterval = setInterval(() => {
                 const minutes = Math.floor(timer / 60);
                 const seconds = timer % 60;
-                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timerEl.textContent = timeString;
+                updateStudentStatus('In Progress', { timeLeft: timeString });
                 if (--timer < 0) {
                     endExam("Time's up!");
                 }
             }, 1000);
         }
 
-        function startRecording() { /* Unchanged */ }
-        function uploadChunk() { /* Unchanged */ }
+        function startRecording() {
+            if (!mediaStream) return;
+            recorderInterval = setInterval(() => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                
+                let options = { mimeType: 'video/webm; codecs=vp9' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'video/webm; codecs=vp8' };
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options = { mimeType: 'video/webm' };
+                    }
+                }
+                
+                try {
+                    mediaRecorder = new MediaRecorder(mediaStream, options);
+                    recordedChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) recordedChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = uploadChunk;
+                    mediaRecorder.start();
+                } catch(e) {
+                    console.error("Error starting MediaRecorder:", e);
+                    clearInterval(recorderInterval); // Stop trying if it fails
+                }
+            }, 20000); // 20-second chunks
+        }
+        
+        function uploadChunk() {
+            if (recordedChunks.length === 0) return;
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            console.log(`--- SIMULATING CHUNK UPLOAD --- Size: ${blob.size} bytes.`);
+            recordedChunks = [];
+        }
 
-        // --- Advanced Monitoring & Security ---
         function enterFullScreen() {
             const elem = document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen().catch(err => {
-                    console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    // Ignore fullscreen errors in sandboxed environments
                 });
             }
         }
         
         function flashScreenshotWarning() {
+            triggerViolation('screenshot', 'Screenshots are not permitted.');
             screenshotOverlay.classList.remove('hidden');
-            triggerViolation('screenshot', 'Screenshot attempt detected.');
-            setTimeout(() => {
-                screenshotOverlay.classList.add('hidden');
-            }, 2000); // Hide after 2 seconds
+            setTimeout(() => screenshotOverlay.classList.add('hidden'), 2000);
         }
 
         function startMonitoring() {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                audioAnalyser = audioContext.createAnalyser();
-                audioSource = audioContext.createMediaStreamSource(mediaStream);
-                audioSource.connect(audioAnalyser);
-                audioAnalyser.fftSize = 256;
-            } catch (e) { console.error("Could not set up audio monitoring:", e); }
-
             monitoringInterval = setInterval(() => {
-                // Camera check
                 const videoTrack = mediaStream.getVideoTracks()[0];
-                if ((!videoTrack || videoTrack.muted || !videoTrack.enabled) && !isCameraWarningActive) {
-                    triggerViolation("camera", "Camera is off or obscured.");
-                    isCameraWarningActive = true;
-                } else if (videoTrack && !videoTrack.muted && videoTrack.enabled && isCameraWarningActive) {
-                    resolveViolation("camera");
-                    isCameraWarningActive = false;
+                if (!videoTrack || videoTrack.readyState !== 'live' || !videoTrack.enabled) {
+                    if (!isCameraWarningActive) {
+                        isCameraWarningActive = true;
+                        triggerViolation('camera', "Your camera is off or disconnected.");
+                    }
+                } else {
+                    if (isCameraWarningActive) {
+                        isCameraWarningActive = false;
+                        resolveViolation('camera');
+                    }
                 }
-
-                // Audio check for sustained noise
+                
                 if (audioAnalyser) {
                     const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
                     audioAnalyser.getByteFrequencyData(dataArray);
                     let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                    
                     if (average > AUDIO_THRESHOLD) {
                         sustainedSoundCount++;
                     } else {
                         sustainedSoundCount = 0;
                         if (isSoundWarningActive) {
-                           resolveViolation("sound");
-                           isSoundWarningActive = false;
+                            isSoundWarningActive = false;
+                            resolveViolation('sound');
                         }
                     }
-
                     if (sustainedSoundCount >= SUSTAINED_NOISE_LIMIT && !isSoundWarningActive) {
-                        triggerViolation("sound", "Loud noise or multiple voices detected.");
                         isSoundWarningActive = true;
+                        triggerViolation('sound', "High background noise or talking detected.");
                     }
                 }
-            }, 1500); // Check more frequently
-        }
 
+            }, 2000);
+        }
+        
         function handleVisibilityChange() {
-             if (document.hidden && !examScreen.classList.contains('hidden') && !isTabSwitchWarningActive) {
-                triggerViolation("tab", "You have switched away from the exam tab.");
-                isTabSwitchWarningActive = true;
-            } else if (!document.hidden && isTabSwitchWarningActive) {
-                resolveViolation("tab");
-                isTabSwitchWarningActive = false;
+            if (document.hidden) {
+                if (!isTabSwitchWarningActive) {
+                    isTabSwitchWarningActive = true;
+                    triggerViolation('tab-switch', "You have switched tabs or minimized the window.");
+                }
+            } else {
+                if (isTabSwitchWarningActive) {
+                    isTabSwitchWarningActive = false;
+                    resolveViolation('tab-switch');
+                }
             }
         }
 
@@ -636,15 +750,9 @@
             if (examScreen.classList.contains('hidden')) return;
             violationCounter++;
             violationCounterEl.textContent = violationCounter;
+            updateStudentStatus('In Progress', { violations: violationCounter });
             
-            console.log('--- VIOLATION DETECTED (ADMIN LOG) ---');
-            console.log({
-                timestamp: new Date().toISOString(),
-                studentId: currentStudent.id,
-                studentName: currentStudent.name,
-                violationType: message,
-                violationCount: violationCounter
-            });
+            console.warn(`Violation [${type}]: ${message}. Total: ${violationCounter}`);
             
             if(type !== 'screenshot'){
                 violationOverlay.dataset.violationType = type;
@@ -653,29 +761,29 @@
                 violationOverlay.classList.remove('hidden');
             }
 
-
             if (violationCounter >= MAX_VIOLATIONS) {
                 endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
             }
         }
 
         function resolveViolation(type) {
-            // Only hide the overlay if it's showing the warning for the issue that was just resolved.
-            if (violationOverlay.dataset.violationType === type) {
+            const currentViolation = violationOverlay.dataset.violationType;
+            if (currentViolation === type) {
                 violationOverlay.classList.add('hidden');
-                violationOverlay.dataset.violationType = "";
+                violationOverlay.dataset.violationType = '';
             }
         }
         
         function endExam(reason) {
             clearInterval(timerInterval);
-            clearInterval(recorderInterval);
             clearInterval(monitoringInterval);
-
+            clearInterval(recorderInterval);
             if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-            if(audioContext && audioContext.state !== 'closed') audioContext.close();
 
             const isDisqualified = reason.includes("Disqualified");
+            const status = isDisqualified ? "Disqualified" : "Finished";
+            updateStudentStatus(status, { timeLeft: '00:00', answers: questionBank });
+            
             let endScreenContent = isDisqualified 
                 ? `<div class="text-center p-12 bg-white rounded-lg shadow-xl"><h1 class="text-3xl font-bold text-red-600">Exam Terminated</h1><p class="text-gray-600 mt-4 text-lg">${reason}</p><p class="mt-2 font-bold">Your session has been locked. Please contact the administrator.</p></div>`
                 : `<div class="text-center p-12 bg-white rounded-lg shadow-xl max-w-2xl"><h1 class="text-3xl font-bold text-gray-800">Exam Over</h1><p class="text-gray-600 mt-4 text-lg">The time for the written exam has concluded.</p><div class="mt-6 p-6 bg-blue-50 border-l-4 border-blue-500 text-left"><h2 class="font-bold text-xl text-blue-800 mb-2">WhatsApp Submission Instructions</h2><p class="text-blue-700">You must submit your written answer sheet by taking clear photos and sending them to the official WhatsApp number within <strong>10 minutes</strong>.</p></div></div>`;
@@ -690,47 +798,211 @@
             if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
         }
 
+        // --- Student Status Simulation ---
+        function updateStudentStatus(status, extraData = {}) {
+            if (!currentStudent.id) return;
+            const key = `student_status_${currentStudent.id}`;
+            const existingData = JSON.parse(localStorage.getItem(key)) || {};
+            const data = {
+                ...existingData,
+                id: currentStudent.id,
+                name: currentStudent.name,
+                class: currentStudent.class,
+                status,
+                violations: violationCounter,
+                lastUpdate: new Date().toISOString(),
+                ...extraData
+            };
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
         // --- Admin Functions ---
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.getElementById(`${tabName}-content`).classList.add('active');
+        }
+
         function handleAdminLogin() {
             if (adminPasswordInput.value === ADMIN_PASSWORD) {
                 adminLoginScreen.classList.add('hidden');
                 adminPanelScreen.classList.remove('hidden');
-                loadAdminQuestions();
+                loadAdminConfig();
+                startAdminMonitoring();
             } else {
                 adminLoginError.classList.remove('hidden');
             }
         }
 
-        function loadAdminQuestions() {
-            const storedBank9 = JSON.parse(localStorage.getItem('questionBankClass9'));
-            const storedBank10 = JSON.parse(localStorage.getItem('questionBankClass10'));
+        function loadAdminConfig() {
+            const config = getExamConfig();
+            examDurationInput.value = config.duration;
+            adminTempQuestions[9] = config.questionBankClass9.questions;
+            adminTempQuestions[10] = config.questionBankClass10.questions;
+            renderAdminQuestionLists();
+        }
 
-            if (storedBank9) {
-                adminQuestionsClass9.value = storedBank9.questions.map(q => q.text).join('\n');
+        function renderAdminQuestionLists() {
+            const list9 = document.getElementById('admin-questions-list-class9');
+            const list10 = document.getElementById('admin-questions-list-class10');
+            
+            list9.innerHTML = adminTempQuestions[9].map((q, i) => createQuestionListItem(q, 9, i)).join('');
+            list10.innerHTML = adminTempQuestions[10].map((q, i) => createQuestionListItem(q, 10, i)).join('');
+        }
+
+        function createQuestionListItem(q, classNum, index) {
+            const content = q.type === 'image'
+                ? `<img src="${q.content}" class="h-12 w-auto rounded-md">`
+                : `<p class="truncate text-gray-600">${q.content}</p>`;
+            return `<div class="flex items-center justify-between p-2 bg-white border-b">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-gray-500">${index + 1}.</span>
+                            ${content}
+                        </div>
+                        <button class="text-red-500 hover:text-red-700 font-bold" onclick="removeQuestion(${classNum}, ${index})">X</button>
+                    </div>`;
+        }
+
+        function removeQuestion(classNum, index) {
+            adminTempQuestions[classNum].splice(index, 1);
+            setAdminDirtyState(true);
+            renderAdminQuestionLists();
+        }
+
+        function handleAddTextQuestion(event) {
+            const classNum = event.target.dataset.target;
+            const textarea = document.getElementById(`admin-new-question-${classNum}`);
+            const text = textarea.value.trim();
+            if (text) {
+                adminTempQuestions[classNum].push({ id: Date.now(), type: 'text', content: text, userAnswer: "", status: "not-answered" });
+                textarea.value = '';
+                setAdminDirtyState(true);
+                renderAdminQuestionLists();
             }
-            if (storedBank10) {
-                adminQuestionsClass10.value = storedBank10.questions.map(q => q.text).join('\n');
+        }
+        
+        function handleImageUpload(event, classNum) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                adminTempQuestions[classNum].push({ id: Date.now(), type: 'image', content: e.target.result, userAnswer: "", status: "not-answered" });
+                setAdminDirtyState(true);
+                renderAdminQuestionLists();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = null; // Reset file input
+        }
+
+        function setAdminDirtyState(isDirty) {
+            isAdminConfigDirty = isDirty;
+            if (isDirty) {
+                adminSaveBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                adminSaveBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'animate-pulse');
+                adminSaveBtn.textContent = 'Save Unsaved Changes';
+            } else {
+                adminSaveBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                adminSaveBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'animate-pulse');
+                adminSaveBtn.textContent = 'Save All Settings & Questions';
             }
         }
 
         function handleAdminSave() {
-            const questions9Text = adminQuestionsClass9.value.trim().split('\n').filter(Boolean);
-            const questions10Text = adminQuestionsClass10.value.trim().split('\n').filter(Boolean);
-
-            const newBank9 = {
-                subject: "Science",
-                questions: questions9Text.map((text, i) => ({ id: 901 + i, text, userAnswer: "", status: "not-answered" }))
+            const config = {
+                duration: parseInt(examDurationInput.value, 10) || 60,
+                questionBankClass9: { subject: 'Science', questions: adminTempQuestions[9] },
+                questionBankClass10: { subject: 'Mathematics', questions: adminTempQuestions[10] }
             };
-             const newBank10 = {
-                subject: "Mathematics",
-                questions: questions10Text.map((text, i) => ({ id: 1001 + i, text, userAnswer: "", status: "not-answered" }))
-            };
-
-            localStorage.setItem('questionBankClass9', JSON.stringify(newBank9));
-            localStorage.setItem('questionBankClass10', JSON.stringify(newBank10));
-
-            adminSaveFeedback.textContent = 'Questions saved successfully!';
+            localStorage.setItem('examConfig', JSON.stringify(config));
+            adminSaveFeedback.textContent = 'Settings saved successfully!';
+            setAdminDirtyState(false);
             setTimeout(() => { adminSaveFeedback.textContent = ''; }, 3000);
+        }
+
+        function getExamConfig() {
+            const stored = localStorage.getItem('examConfig');
+            if (stored) return JSON.parse(stored);
+            return {
+                duration: 60,
+                questionBankClass9: defaultQuestionBankClass9,
+                questionBankClass10: defaultQuestionBankClass10
+            };
+        }
+
+        function startAdminMonitoring() {
+            if (adminMonitoringInterval) clearInterval(adminMonitoringInterval);
+            updateMonitoringDashboard(); // Initial call
+            adminMonitoringInterval = setInterval(updateMonitoringDashboard, 5000);
+        }
+
+        function updateMonitoringDashboard() {
+            const studentIds = ['SIRIL09', 'SAM10'];
+            studentMonitoringGrid.innerHTML = ''; // Clear previous state
+            studentIds.forEach(id => {
+                const data = JSON.parse(localStorage.getItem(`student_status_${id}`));
+                studentMonitoringGrid.insertAdjacentHTML('beforeend', createStudentCard(data, id));
+            });
+        }
+
+        function createStudentCard(data, id) {
+            if (!data) { // Handle case where student hasn't started
+                const name = (id === 'SIRIL09' ? 'Siril' : 'Sam');
+                return `<div class="bg-gray-100 p-4 rounded-lg border">
+                            <h3 class="font-bold text-lg">${name}</h3>
+                            <p class="text-gray-500">Offline</p>
+                        </div>`;
+            }
+
+            let statusColor = 'text-gray-500';
+            if (data.status === 'In Progress') statusColor = 'text-blue-500 animate-pulse';
+            if (data.status === 'Finished') statusColor = 'text-green-500';
+            if (data.status === 'Disqualified') statusColor = 'text-red-500';
+
+            return `<div class="bg-white p-4 rounded-lg shadow-md border">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-xl">${data.name} (Class ${data.class})</h3>
+                            <span class="font-semibold px-3 py-1 rounded-full text-sm ${statusColor.replace('text-', 'bg-').replace('-500', '-100')} ${statusColor}">${data.status}</span>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p class="text-sm text-gray-500">Time Left</p>
+                                <p class="font-bold text-lg">${data.timeLeft || '--:--'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Violations</p>
+                                <p class="font-bold text-lg ${data.violations > 0 ? 'text-red-500' : ''}">${data.violations}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button class="w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50" 
+                                    onclick="viewAnswers('${data.id}')" 
+                                    ${data.status !== 'Finished' && data.status !== 'Disqualified' ? 'disabled' : ''}>
+                                View Answers
+                            </button>
+                        </div>
+                    </div>`;
+        }
+
+        function viewAnswers(studentId) {
+            const data = JSON.parse(localStorage.getItem(`student_status_${studentId}`));
+            if (!data || !data.answers) {
+                alert("No answer data found for this student.");
+                return;
+            }
+            answersModalTitle.textContent = `Answers for ${data.name}`;
+            answersModalContent.innerHTML = data.answers.map((q, i) => {
+                const qContent = q.type === 'image'
+                    ? `<img src="${q.content}" class="max-w-xs h-auto rounded-md my-2">`
+                    : `<p class="font-semibold text-gray-700">${q.content}</p>`;
+
+                return `<div class="mb-4 pb-4 border-b">
+                            <p class="font-bold">Question ${i + 1}:</p>
+                            ${qContent}
+                            <p class="mt-2 p-2 bg-gray-100 rounded-md text-gray-800">${q.userAnswer || '<i>No answer provided.</i>'}</p>
+                        </div>`;
+            }).join('');
+            viewAnswersModal.classList.remove('hidden');
         }
 
     </script>
