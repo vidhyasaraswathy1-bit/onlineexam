@@ -34,9 +34,9 @@
         .marked-for-review { background-color: #6366f1; color: white; }
         .current-question { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
         textarea:focus, input:focus {
-             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-             border-color: #3b82f6;
-             outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+            outline: none;
         }
         textarea, input[type="password"], input[type="number"] {
             -webkit-user-select: auto;
@@ -45,9 +45,8 @@
             user-select: auto;
         }
         @media print {
-          body { visibility: hidden; }
+            body { visibility: hidden; }
         }
-        /* Styling for the admin panel tabs */
         .admin-tab { cursor: pointer; padding: 0.75rem 1.5rem; border-bottom: 3px solid transparent; }
         .admin-tab.active { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
         .admin-tab-content { display: none; }
@@ -57,7 +56,6 @@
 <body class="flex items-center justify-center min-h-screen bg-gray-100">
 
     <div id="container" class="w-full max-w-6xl mx-auto p-4 md:p-8">
-
         <!-- 0. Login Screen -->
         <div id="login-screen" class="p-8 bg-white rounded-2xl shadow-xl text-center">
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to the Examination Portal</h1>
@@ -84,13 +82,10 @@
         <!-- ADMIN: Panel -->
         <div id="admin-panel-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
-            <!-- Admin Tabs -->
             <div class="flex border-b mb-6">
-                <div id="config-tab" class="admin-tab active" onclick="switchAdminTab('config')">Exam Configuration</div>
-                <div id="monitoring-tab" class="admin-tab" onclick="switchAdminTab('monitoring')">Live Monitoring & Results</div>
+                <div id="config-tab" class="admin-tab active">Exam Configuration</div>
+                <div id="monitoring-tab" class="admin-tab">Live Monitoring & Results</div>
             </div>
-
-            <!-- Tab Content: Configuration -->
             <div id="config-content" class="admin-tab-content active">
                 <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
                     <label for="exam-duration" class="block text-lg font-semibold mb-2">Exam Duration (minutes)</label>
@@ -106,6 +101,7 @@
                             <input type="file" accept="image/*" class="hidden" id="image-upload-9">
                             <label for="image-upload-9" class="add-image-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 cursor-pointer">Add Image</label>
                         </div>
+                        <p id="image-upload-feedback-9" class="text-sm text-red-500 mt-1"></p>
                     </div>
                     <div>
                         <h2 class="text-xl font-semibold mb-2">Class 10 (Mathematics) Questions</h2>
@@ -116,6 +112,7 @@
                             <input type="file" accept="image/*" class="hidden" id="image-upload-10">
                             <label for="image-upload-10" class="add-image-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 cursor-pointer">Add Image</label>
                         </div>
+                         <p id="image-upload-feedback-10" class="text-sm text-red-500 mt-1"></p>
                     </div>
                 </div>
                 <div class="mt-8 text-center">
@@ -123,18 +120,12 @@
                     <p id="admin-save-feedback" class="text-green-600 mt-4 font-semibold"></p>
                 </div>
             </div>
-
-            <!-- Tab Content: Monitoring -->
             <div id="monitoring-content" class="admin-tab-content">
-                <p class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">This dashboard simulates live monitoring by reading data saved by the student's browser. Data updates every 5 seconds. In a real application, this would be powered by a server.</p>
-                <div id="student-monitoring-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Student cards will be injected here -->
-                </div>
+                <p class="text-sm text-gray-500 mb-4 bg-green-50 p-3 rounded-lg border border-green-200">This dashboard is connected to the live database. Status updates from all students will appear here in real-time.</p>
+                <div id="student-monitoring-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
         </div>
 
-        <!-- All other screens -->
-        <!-- 1. Guidelines Screen -->
         <div id="guidelines-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">Before Exam Guidelines</h1>
             <h2 class="text-xl font-semibold text-gray-700 mb-6 text-center">(Must Read & Accept)</h2>
@@ -167,8 +158,6 @@
             </div>
         </div>
 
-
-        <!-- 2. Permissions Screen -->
         <div id="permissions-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-gray-800 mb-4">System Check</h1>
             <p class="text-gray-600 mb-6">This exam requires camera and microphone access for proctoring.</p>
@@ -179,7 +168,6 @@
             <p id="permissions-error" class="text-red-500 mt-4 hidden"></p>
         </div>
 
-        <!-- 3. ID Verification Screen -->
         <div id="id-verification-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Identity Verification</h2>
             <p class="text-gray-600 mb-6">Please hold your government-issued photo ID clearly in front of the camera.</p>
@@ -193,7 +181,6 @@
             <div id="id-capture-feedback" class="mt-4"></div>
         </div>
         
-        <!-- 3.5 Pre-Exam Lobby Screen -->
         <div id="pre-exam-lobby-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Final Step Before Starting</h2>
             <p class="text-gray-600 mb-6">A new window has opened for the Google Meet proctoring session. Please join the meeting now.</p>
@@ -204,27 +191,20 @@
             <p class="text-sm text-gray-500 mt-6">Do not close the Google Meet window during the exam.</p>
         </div>
 
-        <!-- 4. Exam Screen -->
         <div id="exam-screen" class="hidden p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow-xl">
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b">
-                <div id="exam-header-info">
-                    <!-- Student-specific info will be injected here -->
-                </div>
+                <div id="exam-header-info"></div>
                 <div id="timer" class="mt-4 sm:mt-0 text-2xl font-bold text-red-600 bg-red-100 px-4 py-2 rounded-lg">--:--</div>
             </header>
-            
             <main class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div class="lg:col-span-3">
-                    <div id="question-container" class="bg-gray-50 p-6 rounded-lg min-h-[400px]">
-                        <!-- Question content will be dynamically inserted here -->
-                    </div>
+                    <div id="question-container" class="bg-gray-50 p-6 rounded-lg min-h-[400px]"></div>
                     <div class="flex justify-between mt-6">
                         <button id="prev-question-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">Previous</button>
                         <button id="mark-review-btn" class="bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-600">Mark for Review</button>
                         <button id="next-question-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700">Next</button>
                     </div>
                 </div>
-
                 <aside class="lg:col-span-1">
                     <div class="bg-gray-800 p-4 rounded-lg text-white mb-6">
                         <h4 class="font-semibold mb-2 text-center">Proctoring Active</h4>
@@ -233,15 +213,13 @@
                         </div>
                         <p class="text-xs text-center mt-2 text-gray-400">Your webcam and microphone are being recorded.</p>
                          <div class="mt-2 text-center">
-                            <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 5</p>
-                        </div>
+                              <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 5</p>
+                         </div>
                     </div>
                      <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-3 text-center text-gray-700">Question Palette</h4>
-                        <div id="question-palette" class="grid grid-cols-5 gap-2">
-                            <!-- Palette buttons will be dynamically inserted here -->
-                        </div>
-                    </div>
+                         <h4 class="font-semibold mb-3 text-center text-gray-700">Question Palette</h4>
+                         <div id="question-palette" class="grid grid-cols-5 gap-2"></div>
+                     </div>
                     <button id="submit-exam-btn" class="mt-6 w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors shadow-md">
                         Submit Exam
                     </button>
@@ -249,7 +227,6 @@
             </main>
         </div>
 
-        <!-- Blocking overlay for violations -->
         <div id="violation-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50" data-violation-type="">
             <div class="text-center text-white p-12 rounded-lg">
                 <h2 class="text-4xl font-bold text-yellow-400 mb-4">Warning!</h2>
@@ -259,12 +236,10 @@
             </div>
         </div>
         
-        <!-- Screenshot Blackout Overlay -->
         <div id="screenshot-overlay" class="hidden fixed inset-0 bg-black flex items-center justify-center z-[100]">
             <h2 class="text-4xl font-bold text-white">Screenshots are not permitted.</h2>
         </div>
 
-        <!-- Custom Confirmation Modal for Submission -->
         <div id="confirm-submit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
             <div class="bg-white p-8 rounded-lg shadow-xl text-center">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Confirm Submission</h3>
@@ -276,7 +251,6 @@
             </div>
         </div>
         
-        <!-- View Answers Modal -->
         <div id="view-answers-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
              <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
                  <h3 id="answers-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Student Answers</h3>
@@ -285,10 +259,59 @@
             </div>
         </div>
 
-    </div>
+        <!-- Firebase Error Modal -->
+        <div id="firebase-error-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4">
+            <div class="bg-white p-8 rounded-lg shadow-xl text-left max-w-lg">
+                <h3 class="text-xl font-bold text-red-600 mb-4">Database Connection Error</h3>
+                <p class="text-gray-700 mb-4">The application could not connect to the database due to a permissions issue.</p>
+                <p class="text-gray-700 mb-4"><strong>This is a common issue with test databases.</strong> The default security rules expire after 30 days.</p>
+                <p class="text-gray-700 font-semibold mb-2">How to fix it:</p>
+                <ol class="list-decimal list-inside text-gray-600 space-y-2 bg-gray-50 p-4 rounded-md">
+                    <li>Go to your Firebase project console.</li>
+                    <li>Navigate to <strong class="text-gray-800">Firestore Database</strong> > <strong class="text-gray-800">Rules</strong> tab.</li>
+                    <li>Replace the existing code with: <br><code class="text-sm bg-gray-200 p-1 rounded">rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if request.auth != null; } } }</code></li>
+                    <li>Click <strong class="text-gray-800">Publish</strong>.</li>
+                </ol>
+                <div class="mt-6 text-center">
+                    <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-blue-700">I have fixed it, Reload</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Authentication Error Modal -->
+        <div id="auth-error-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4">
+            <div class="bg-white p-8 rounded-lg shadow-xl text-left max-w-lg">
+                <h3 class="text-xl font-bold text-yellow-600 mb-4">Authentication Error</h3>
+                <p class="text-gray-700 mb-4">The application could not sign in because a required authentication method is disabled.</p>
+                <p class="text-gray-700 font-semibold mb-2">How to fix it:</p>
+                <ol class="list-decimal list-inside text-gray-600 space-y-2 bg-gray-50 p-4 rounded-md">
+                    <li>Go to your Firebase project console.</li>
+                    <li>Navigate to <strong class="text-gray-800">Authentication</strong> > <strong class="text-gray-800">Sign-in method</strong> tab.</li>
+                    <li>Find <strong class="text-gray-800">Anonymous</strong> in the provider list and click the pencil icon to edit.</li>
+                    <li><strong class="text-gray-800">Enable</strong> the toggle switch and click <strong class="text-gray-800">Save</strong>.</li>
+                </ol>
+                <div class="mt-6 text-center">
+                    <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-2 px-8 rounded-lg hover:bg-blue-700">I have fixed it, Reload</button>
+                </div>
+            </div>
+        </div>
 
-    <script>
-        // --- DOM Elements ---
+    </div>
+    
+    <!-- End Screen Overlay -->
+    <div id="end-screen-overlay" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Using latest Firebase v11+ SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Global App ID for Firestore pathing
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'secure-exam-portal';
+
+        // DOM Element selectors
         const loginScreen = document.getElementById('login-screen');
         const guidelinesScreen = document.getElementById('guidelines-screen');
         const agreeCheckbox = document.getElementById('agree-checkbox');
@@ -325,8 +348,6 @@
         const closeAnswersModalBtn = document.getElementById('close-answers-modal-btn');
         const answersModalTitle = document.getElementById('answers-modal-title');
         const answersModalContent = document.getElementById('answers-modal-content');
-
-        // Admin Elements
         const adminLoginScreen = document.getElementById('admin-login-screen');
         const adminPanelScreen = document.getElementById('admin-panel-screen');
         const adminPasswordInput = document.getElementById('admin-password');
@@ -336,96 +357,150 @@
         const adminSaveBtn = document.getElementById('admin-save-btn');
         const adminSaveFeedback = document.getElementById('admin-save-feedback');
         const studentMonitoringGrid = document.getElementById('student-monitoring-grid');
+        const firebaseErrorModal = document.getElementById('firebase-error-modal');
+        const authErrorModal = document.getElementById('auth-error-modal');
+        const endScreenOverlay = document.getElementById('end-screen-overlay');
 
-        // --- State and Config ---
+        // Global state variables
+        let db, auth;
         let currentStudent = {};
         let questionBank = [];
         let mediaStream, mediaRecorder, recorderInterval, audioContext, audioSource, audioAnalyser;
         let recordedChunks = [];
-        let examDurationSeconds = 60 * 60; // Default
+        let examDurationSeconds = 3600;
         const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs";
         const MAX_VIOLATIONS = 5;
         const AUDIO_THRESHOLD = 60;
         const SUSTAINED_NOISE_LIMIT = 2;
-        const ADMIN_PASSWORD = "admin123"; 
+        const ADMIN_PASSWORD = "admin123";
         let violationCounter = 0;
         let currentQuestionIndex = 0;
-        let timerInterval, monitoringInterval, adminMonitoringInterval;
+        let timerInterval, monitoringInterval;
         let adminTempQuestions = { 9: [], 10: [] };
         let isAdminConfigDirty = false;
-
         let isCameraWarningActive = false;
         let isSoundWarningActive = false;
         let isTabSwitchWarningActive = false;
         let sustainedSoundCount = 0;
 
-        // --- Default Question Banks ---
         const defaultQuestionBankClass9 = {
             subject: "Science",
-            questions: [
-                { id: 901, type: 'text', content: "Explain the process of photosynthesis in plants.", userAnswer: "", status: "not-answered" },
-            ]
+            questions: [{ id: 901, type: 'text', content: "Explain the process of photosynthesis in plants.", userAnswer: "", status: "not-answered" }]
         };
         const defaultQuestionBankClass10 = {
             subject: "Mathematics",
-            questions: [
-                { id: 1001, type: 'text', content: "Solve the quadratic equation: x² - 5x + 6 = 0.", userAnswer: "", status: "not-answered" },
-            ]
+            questions: [{ id: 1001, type: 'text', content: "Solve the quadratic equation: x² - 5x + 6 = 0.", userAnswer: "", status: "not-answered" }]
         };
-        
-        // --- Event Listeners ---
-        window.addEventListener('load', handleRouting);
-        window.addEventListener('hashchange', handleRouting);
-        window.addEventListener('beforeunload', (event) => {
-            if (isAdminConfigDirty) {
-                event.preventDefault();
-                event.returnValue = ''; // Required for modern browsers
+
+        // --- Main Application Entry Point ---
+        async function main() {
+            try {
+                let firebaseConfig;
+
+                if (typeof __firebase_config !== 'undefined') {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } else {
+                    console.warn("Using fallback Firebase configuration.");
+                    const fallbackConfig = {
+                        apiKey: "AIzaSyAusoeLoI3wmeD8zvhJ8w7CvNmDzYI_8kk",
+                        authDomain: "examportal-343d6.firebaseapp.com",
+                        projectId: "examportal-343d6",
+                        storageBucket: "examportal-343d6.firebasestorage.app",
+                        messagingSenderId: "958796242275",
+                        appId: "1:958796242275:web:c308cc8106842fa78a8756",
+                        measurementId: "G-5K1FZ0V88G"
+                    };
+                    firebaseConfig = fallbackConfig;
+                }
+
+                if (!firebaseConfig || !firebaseConfig.apiKey) {
+                     document.body.innerHTML = `<div class="p-8 text-center"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"><strong class="font-bold">Configuration Error:</strong><span class="block sm:inline"> Firebase configuration is missing or incomplete.</span></div></div>`;
+                     console.error("FATAL ERROR: Firebase configuration is invalid.");
+                     return;
+                }
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('debug');
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                console.log("Firebase Authentication Successful. User UID:", auth.currentUser.uid);
+
+                setupEventListeners();
+                handleRouting();
+
+            } catch (error) {
+                console.error("Application Initialization Failed:", error);
+                if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found') {
+                    console.error("Anonymous sign-in is not enabled in the Firebase project.");
+                    authErrorModal.classList.remove('hidden');
+                } else if (error.code === 'permission-denied') {
+                    handleFirebaseError(error, "initialization");
+                } else {
+                    document.body.innerHTML = `<div class="text-red-500 p-8 text-center"><strong>FATAL ERROR:</strong> Could not initialize the application. Please check the console for details. Error: ${error.message}</div>`;
+                }
             }
-        });
+        }
 
-        document.querySelectorAll('.student-login-btn').forEach(btn => btn.addEventListener('click', handleLogin));
-        agreeCheckbox.addEventListener('change', () => { agreeBtn.disabled = !agreeCheckbox.checked; });
-        agreeBtn.addEventListener('click', () => {
-            guidelinesScreen.classList.add('hidden');
-            permissionsScreen.classList.remove('hidden');
-        });
-        grantPermissionsBtn.addEventListener('click', requestPermissions);
-        captureIdBtn.addEventListener('click', captureId);
-        startExamNowBtn.addEventListener('click', startExam);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        prevQuestionBtn.addEventListener('click', showPreviousQuestion);
-        nextQuestionBtn.addEventListener('click', showNextQuestion);
-        markReviewBtn.addEventListener('click', markQuestionForReview);
-        submitExamBtn.addEventListener('click', () => { confirmSubmitModal.classList.remove('hidden'); });
-        cancelSubmitBtn.addEventListener('click', () => { confirmSubmitModal.classList.add('hidden'); });
-        confirmSubmitBtn.addEventListener('click', () => {
-            confirmSubmitModal.classList.add('hidden');
-            endExam("Exam submitted successfully.");
-        });
-        closeAnswersModalBtn.addEventListener('click', () => viewAnswersModal.classList.add('hidden'));
+        function setupEventListeners() {
+            window.addEventListener('hashchange', handleRouting);
+            window.addEventListener('beforeunload', (event) => {
+                if (isAdminConfigDirty) {
+                    event.preventDefault();
+                    event.returnValue = '';
+                }
+            });
 
-        // Admin Listeners
-        adminLoginBtn.addEventListener('click', handleAdminLogin);
-        adminSaveBtn.addEventListener('click', handleAdminSave);
-        examDurationInput.addEventListener('input', () => setAdminDirtyState(true));
-        document.querySelectorAll('.add-text-btn').forEach(btn => btn.addEventListener('click', handleAddTextQuestion));
-        document.getElementById('image-upload-9').addEventListener('change', (e) => handleImageUpload(e, 9));
-        document.getElementById('image-upload-10').addEventListener('change', (e) => handleImageUpload(e, 10));
+            document.querySelectorAll('.student-login-btn').forEach(btn => btn.addEventListener('click', handleLogin));
+            agreeCheckbox.addEventListener('change', () => { agreeBtn.disabled = !agreeCheckbox.checked; });
+            agreeBtn.addEventListener('click', () => {
+                guidelinesScreen.classList.add('hidden');
+                permissionsScreen.classList.remove('hidden');
+            });
+            grantPermissionsBtn.addEventListener('click', requestPermissions);
+            captureIdBtn.addEventListener('click', captureId);
+            startExamNowBtn.addEventListener('click', startExam);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            prevQuestionBtn.addEventListener('click', showPreviousQuestion);
+            nextQuestionBtn.addEventListener('click', showNextQuestion);
+            markReviewBtn.addEventListener('click', markQuestionForReview);
+            submitExamBtn.addEventListener('click', () => { confirmSubmitModal.classList.remove('hidden'); });
+            cancelSubmitBtn.addEventListener('click', () => { confirmSubmitModal.classList.add('hidden'); });
+            confirmSubmitBtn.addEventListener('click', () => {
+                confirmSubmitModal.classList.add('hidden');
+                endExam("Exam submitted successfully.");
+            });
+            closeAnswersModalBtn.addEventListener('click', () => viewAnswersModal.classList.add('hidden'));
+            document.getElementById('config-tab').addEventListener('click', () => switchAdminTab('config'));
+            document.getElementById('monitoring-tab').addEventListener('click', () => switchAdminTab('monitoring'));
 
-        // --- Core Functions ---
+            adminLoginBtn.addEventListener('click', handleAdminLogin);
+            adminSaveBtn.addEventListener('click', handleAdminSave);
+            examDurationInput.addEventListener('input', () => setAdminDirtyState(true));
+            document.querySelectorAll('.add-text-btn').forEach(btn => btn.addEventListener('click', handleAddTextQuestion));
+            document.getElementById('image-upload-9').addEventListener('change', (e) => handleImageUpload(e, 9));
+            document.getElementById('image-upload-10').addEventListener('change', (e) => handleImageUpload(e, 10));
+            studentMonitoringGrid.addEventListener('click', (e) => {
+                if (e.target.closest('.view-answers-btn')) {
+                    viewAnswers(e.target.closest('.view-answers-btn').dataset.studentId);
+                }
+            });
+        }
         
+        function handleFirebaseError(error, context) {
+            console.error(`Firebase permission denied during ${context}. Please update your Firestore security rules.`, error);
+            firebaseErrorModal.classList.remove('hidden');
+        }
+
         function handleRouting() {
             const hash = window.location.hash;
-            // Hide all screens initially
-            loginScreen.classList.add('hidden');
-            guidelinesScreen.classList.add('hidden');
-            permissionsScreen.classList.add('hidden');
-            idVerificationScreen.classList.add('hidden');
-            preExamLobbyScreen.classList.add('hidden');
-            examScreen.classList.add('hidden');
-            adminLoginScreen.classList.add('hidden');
-            adminPanelScreen.classList.add('hidden');
-
+            document.querySelectorAll('#container > div').forEach(el => el.classList.add('hidden'));
             if (hash === '#admin') {
                 adminLoginScreen.classList.remove('hidden');
             } else {
@@ -435,12 +510,9 @@
 
         function handleLogin(event) {
             const student = event.target.dataset.student;
-
-            if (student === 'siril') {
-                currentStudent = { name: 'Siril', class: '9', id: 'SIRIL09' };
-            } else {
-                currentStudent = { name: 'Sam', class: '10', id: 'SAM10' };
-            }
+            currentStudent = (student === 'siril') ?
+                { name: 'Siril', class: '9', id: 'SIRIL09' } :
+                { name: 'Sam', class: '10', id: 'SAM10' };
             loginScreen.classList.add('hidden');
             guidelinesScreen.classList.remove('hidden');
         }
@@ -452,23 +524,17 @@
                 permissionsScreen.classList.add('hidden');
                 idVerificationScreen.classList.remove('hidden');
                 webcamPreview.srcObject = mediaStream;
-                
-                // Initialize audio analysis
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioSource = audioContext.createMediaStreamSource(mediaStream);
                 audioAnalyser = audioContext.createAnalyser();
                 audioAnalyser.fftSize = 256;
                 audioSource.connect(audioAnalyser);
-
             } catch (err) {
                 console.error("Permissions error:", err);
-                let errorMessage = "Permissions were denied. Camera and microphone are required for this exam.";
-                if (err.name === "NotAllowedError") {
-                    errorMessage = "You have denied camera/microphone permissions. Please enable them in your browser settings and refresh the page.";
-                } else if (err.name === "NotFoundError") {
-                    errorMessage = "No camera or microphone was found on your device. Please connect them and try again.";
-                }
-                permissionsError.textContent = errorMessage;
+                let msg = "Permissions were denied. Camera and microphone are required.";
+                if (err.name === "NotAllowedError") msg = "You denied permissions. Please enable them in browser settings and refresh.";
+                if (err.name === "NotFoundError") msg = "No camera or microphone found. Please connect them.";
+                permissionsError.textContent = msg;
                 permissionsError.classList.remove('hidden');
             }
         }
@@ -476,12 +542,9 @@
         function captureId() {
             idCanvas.width = webcamPreview.videoWidth;
             idCanvas.height = webcamPreview.videoHeight;
-            const context = idCanvas.getContext('2d');
-            context.drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
-            // In a real app, this image data would be uploaded.
-            console.log("ID Captured"); 
-            
-            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID captured successfully!</p><button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed</button>`;
+            idCanvas.getContext('2d').drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
+            console.log("ID Captured");
+            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID captured!</p><button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed</button>`;
             document.getElementById('proceed-to-lobby-btn').addEventListener('click', showLobby);
             captureIdBtn.disabled = true;
         }
@@ -492,105 +555,69 @@
             window.open(PROCTOR_MEET_LINK, '_blank', 'noopener,noreferrer');
         }
 
-        function startExam() {
+        async function startExam() {
             preExamLobbyScreen.classList.add('hidden');
             examScreen.classList.remove('hidden');
             proctorFeed.srcObject = mediaStream;
 
-            // --- LOAD LATEST CONFIG ---
-            const config = getExamConfig();
+            const config = await getExamConfig();
             examDurationSeconds = config.duration * 60;
-            const subject = currentStudent.class === '9' ? config.questionBankClass9.subject : config.questionBankClass10.subject;
-            questionBank = currentStudent.class === '9' ? config.questionBankClass9.questions : config.questionBankClass10.questions;
-            // --- END LOAD LATEST CONFIG ---
-
-            examHeaderInfo.innerHTML = `
-                <h1 class="text-2xl font-bold text-gray-800">Annual Examination - ${subject}</h1>
-                <p class="text-gray-500">Candidate: ${currentStudent.name} (Class: ${currentStudent.class})</p>
-            `;
+            const bankData = (currentStudent.class === '9') ? config.questionBankClass9 : config.questionBankClass10;
+            questionBank = bankData.questions.map(q => ({ ...q, userAnswer: "", status: "not-answered" }));
+            
+            examHeaderInfo.innerHTML = `<h1 class="text-2xl font-bold text-gray-800">Annual Examination - ${bankData.subject}</h1><p class="text-gray-500">Candidate: ${currentStudent.name} (Class: ${currentStudent.class})</p>`;
             
             enterFullScreen();
-             document.addEventListener('contextmenu', event => event.preventDefault());
-            document.addEventListener('copy', event => event.preventDefault());
-            document.addEventListener('keydown', (e) => {
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('copy', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
                 if (e.key === 'PrintScreen') { e.preventDefault(); flashScreenshotWarning(); }
-                if (e.ctrlKey && e.key === 'p') { e.preventDefault(); }
-                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) { e.preventDefault(); }
+                if (e.ctrlKey && e.key === 'p') e.preventDefault();
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) e.preventDefault();
             });
 
-            updateStudentStatus('In Progress');
+            await updateStudentStatus('In Progress');
             startTimer(examDurationSeconds);
             startRecording();
             startMonitoring();
             renderQuestionPalette();
-            renderQuestion(currentQuestionIndex);
+            renderQuestion(0);
         }
-        
+
         function renderQuestion(index) {
             currentQuestionIndex = index;
             const question = questionBank[index];
-            let questionContentHTML = '';
-            if (question.type === 'image') {
-                questionContentHTML = `<img src="${question.content}" alt="Question Image" class="max-w-full h-auto rounded-lg mx-auto">`;
-            } else {
-                questionContentHTML = `<p class="text-gray-700 mb-4 whitespace-pre-wrap">${question.content}</p>`;
-            }
-
             questionContainer.innerHTML = `
                 <h3 class="font-semibold text-lg mb-2">Question ${index + 1} of ${questionBank.length}</h3>
-                ${questionContentHTML}
+                ${question.type === 'image' ? `<img src="${question.content}" alt="Question Image" class="max-w-full h-auto rounded-lg mx-auto">` : `<p class="text-gray-700 mb-4 whitespace-pre-wrap">${question.content}</p>`}
                 <div class="mt-4">
                     <label for="answer-text" class="block text-sm font-medium text-gray-700 mb-2">Your Answer:</label>
                     <textarea id="answer-text" rows="8" class="w-full p-3 border border-gray-300 rounded-lg">${question.userAnswer || ''}</textarea>
                 </div>`;
             
-            const textarea = document.getElementById('answer-text');
-            textarea.addEventListener('input', () => {
-                question.userAnswer = textarea.value;
-                if (textarea.value.trim() !== '' && question.status !== 'marked-for-review') {
-                    question.status = 'answered';
-                } else if (textarea.value.trim() === '' && question.status !== 'marked-for-review') {
-                     question.status = 'not-answered';
-                }
+            document.getElementById('answer-text').addEventListener('input', (e) => {
+                question.userAnswer = e.target.value;
+                question.status = (e.target.value.trim() && question.status !== 'marked-for-review') ? 'answered' : (question.status === 'marked-for-review' ? 'marked-for-review' : 'not-answered');
                 renderQuestionPalette();
             });
 
             prevQuestionBtn.disabled = index === 0;
             nextQuestionBtn.disabled = index === questionBank.length - 1;
-            
-            if (question.status === 'marked-for-review') {
-                markReviewBtn.textContent = 'Unmark';
-                markReviewBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
-                markReviewBtn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
-            } else {
-                markReviewBtn.textContent = 'Mark for Review';
-                markReviewBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
-                markReviewBtn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
-            }
+            markReviewBtn.textContent = question.status === 'marked-for-review' ? 'Unmark' : 'Mark for Review';
+            markReviewBtn.classList.toggle('bg-yellow-500', question.status === 'marked-for-review');
+            markReviewBtn.classList.toggle('hover:bg-yellow-600', question.status === 'marked-for-review');
+            markReviewBtn.classList.toggle('bg-indigo-500', question.status !== 'marked-for-review');
+            markReviewBtn.classList.toggle('hover:bg-indigo-600', question.status !== 'marked-for-review');
             updatePaletteHighlight();
         }
 
         function renderQuestionPalette() {
-            questionPalette.innerHTML = '';
-            questionBank.forEach((q, index) => {
-                const btn = document.createElement('button');
-                btn.textContent = index + 1;
-                btn.className = 'question-palette-btn';
-                btn.dataset.index = index;
-                
-                if (q.status === 'answered') {
-                    btn.classList.add('answered');
-                } else if (q.status === 'marked-for-review') {
-                    btn.classList.add('marked-for-review');
-                } else {
-                    btn.classList.add('not-answered');
-                }
-                
-                btn.addEventListener('click', () => {
-                    renderQuestion(index);
-                });
-                questionPalette.appendChild(btn);
-            });
+            questionPalette.innerHTML = questionBank.map((q, index) =>
+                `<button class="question-palette-btn ${q.status}" data-index="${index}">${index + 1}</button>`
+            ).join('');
+            document.querySelectorAll('.question-palette-btn').forEach(btn =>
+                btn.addEventListener('click', () => renderQuestion(parseInt(btn.dataset.index)))
+            );
             updatePaletteHighlight();
         }
 
@@ -599,42 +626,33 @@
                 btn.classList.toggle('current-question', parseInt(btn.dataset.index) === currentQuestionIndex);
             });
         }
-        
+
         function showPreviousQuestion() {
-            if (currentQuestionIndex > 0) {
-                renderQuestion(currentQuestionIndex - 1);
-            }
+            if (currentQuestionIndex > 0) renderQuestion(currentQuestionIndex - 1);
         }
 
         function showNextQuestion() {
-            if (currentQuestionIndex < questionBank.length - 1) {
-                renderQuestion(currentQuestionIndex + 1);
-            }
+            if (currentQuestionIndex < questionBank.length - 1) renderQuestion(currentQuestionIndex + 1);
         }
 
         function markQuestionForReview() {
             const question = questionBank[currentQuestionIndex];
-            if (question.status === 'marked-for-review') {
-                // Unmark it
-                question.status = (question.userAnswer || '').trim() !== '' ? 'answered' : 'not-answered';
-            } else {
-                question.status = 'marked-for-review';
-            }
-            renderQuestion(currentQuestionIndex); // Re-render to update button text
-            renderQuestionPalette(); // Re-render palette to update color
+            question.status = (question.status === 'marked-for-review')
+                ? ((question.userAnswer || '').trim() ? 'answered' : 'not-answered')
+                : 'marked-for-review';
+            renderQuestion(currentQuestionIndex);
         }
-        
+
         function startTimer(duration) {
             let timer = duration;
-            timerInterval = setInterval(() => {
+            timerInterval = setInterval(async () => {
                 const minutes = Math.floor(timer / 60);
                 const seconds = timer % 60;
-                const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                timerEl.textContent = timeString;
-                updateStudentStatus('In Progress', { timeLeft: timeString });
-                if (--timer < 0) {
-                    endExam("Time's up!");
+                timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                if(timer % 30 === 0) { // Update status every 30 seconds to reduce writes
+                    await updateStudentStatus('In Progress', { timeLeft: timerEl.textContent });
                 }
+                if (--timer < 0) await endExam("Time's up!");
             }, 1000);
         }
 
@@ -644,48 +662,35 @@
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
                 }
-                
                 let options = { mimeType: 'video/webm; codecs=vp9' };
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options = { mimeType: 'video/webm; codecs=vp8' };
-                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                        options = { mimeType: 'video/webm' };
-                    }
+                    options = { mimeType: 'video/webm' };
                 }
-                
                 try {
                     mediaRecorder = new MediaRecorder(mediaStream, options);
                     recordedChunks = [];
-                    
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0) recordedChunks.push(event.data);
-                    };
-                    
+                    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
                     mediaRecorder.onstop = uploadChunk;
                     mediaRecorder.start();
                 } catch(e) {
                     console.error("Error starting MediaRecorder:", e);
-                    clearInterval(recorderInterval); // Stop trying if it fails
+                    clearInterval(recorderInterval);
                 }
-            }, 20000); // 20-second chunks
+            }, 20000);
         }
         
         function uploadChunk() {
-            if (recordedChunks.length === 0) return;
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            console.log(`--- SIMULATING CHUNK UPLOAD --- Size: ${blob.size} bytes.`);
-            recordedChunks = [];
+            if (recordedChunks.length > 0) {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                console.log(`--- SIMULATING CHUNK UPLOAD --- Size: ${blob.size} bytes.`);
+                recordedChunks = [];
+            }
         }
 
         function enterFullScreen() {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => {
-                    // Ignore fullscreen errors in sandboxed environments
-                });
-            }
+            document.documentElement.requestFullscreen().catch(() => {});
         }
-        
+
         function flashScreenshotWarning() {
             triggerViolation('screenshot', 'Screenshots are not permitted.');
             screenshotOverlay.classList.remove('hidden');
@@ -700,46 +705,37 @@
                         isCameraWarningActive = true;
                         triggerViolation('camera', "Your camera is off or disconnected.");
                     }
-                } else {
-                    if (isCameraWarningActive) {
-                        isCameraWarningActive = false;
-                        resolveViolation('camera');
-                    }
+                } else if (isCameraWarningActive) {
+                    isCameraWarningActive = false;
+                    resolveViolation('camera');
                 }
                 
                 if (audioAnalyser) {
                     const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
                     audioAnalyser.getByteFrequencyData(dataArray);
                     let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                    if (average > AUDIO_THRESHOLD) {
-                        sustainedSoundCount++;
-                    } else {
-                        sustainedSoundCount = 0;
-                        if (isSoundWarningActive) {
-                            isSoundWarningActive = false;
-                            resolveViolation('sound');
-                        }
-                    }
+                    if (average > AUDIO_THRESHOLD) sustainedSoundCount++; else sustainedSoundCount = 0;
+                    
                     if (sustainedSoundCount >= SUSTAINED_NOISE_LIMIT && !isSoundWarningActive) {
                         isSoundWarningActive = true;
                         triggerViolation('sound', "High background noise or talking detected.");
+                    } else if (sustainedSoundCount === 0 && isSoundWarningActive) {
+                        isSoundWarningActive = false;
+                        resolveViolation('sound');
                     }
                 }
-
             }, 2000);
         }
         
         function handleVisibilityChange() {
-            if (document.hidden) {
+            if (document.hidden && !examScreen.classList.contains('hidden')) {
                 if (!isTabSwitchWarningActive) {
                     isTabSwitchWarningActive = true;
                     triggerViolation('tab-switch', "You have switched tabs or minimized the window.");
                 }
-            } else {
-                if (isTabSwitchWarningActive) {
-                    isTabSwitchWarningActive = false;
-                    resolveViolation('tab-switch');
-                }
+            } else if (isTabSwitchWarningActive) {
+                isTabSwitchWarningActive = false;
+                resolveViolation('tab-switch');
             }
         }
 
@@ -748,30 +744,24 @@
             violationCounter++;
             violationCounterEl.textContent = violationCounter;
             updateStudentStatus('In Progress', { violations: violationCounter });
-            
             console.warn(`Violation [${type}]: ${message}. Total: ${violationCounter}`);
-            
             if(type !== 'screenshot'){
                 violationOverlay.dataset.violationType = type;
                 violationMessage.textContent = message;
                 violationCountMessage.textContent = `Violations: ${violationCounter} of ${MAX_VIOLATIONS}`;
                 violationOverlay.classList.remove('hidden');
             }
-
-            if (violationCounter >= MAX_VIOLATIONS) {
-                endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
-            }
+            if (violationCounter >= MAX_VIOLATIONS) endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
         }
 
         function resolveViolation(type) {
-            const currentViolation = violationOverlay.dataset.violationType;
-            if (currentViolation === type) {
+            if (violationOverlay.dataset.violationType === type) {
                 violationOverlay.classList.add('hidden');
                 violationOverlay.dataset.violationType = '';
             }
         }
         
-        function endExam(reason) {
+        async function endExam(reason) {
             clearInterval(timerInterval);
             clearInterval(monitoringInterval);
             clearInterval(recorderInterval);
@@ -779,61 +769,58 @@
 
             const isDisqualified = reason.includes("Disqualified");
             const status = isDisqualified ? "Disqualified" : "Finished";
-            updateStudentStatus(status, { timeLeft: '00:00', answers: questionBank });
+            await updateStudentStatus(status, { timeLeft: '00:00', answers: questionBank });
             
-            let endScreenContent = isDisqualified 
-                ? `<div class="text-center p-12 bg-white rounded-lg shadow-xl"><h1 class="text-3xl font-bold text-red-600">Exam Terminated</h1><p class="text-gray-600 mt-4 text-lg">${reason}</p><p class="mt-2 font-bold">Your session has been locked. Please contact the administrator.</p></div>`
-                : `<div class="text-center p-12 bg-white rounded-lg shadow-xl max-w-2xl"><h1 class="text-3xl font-bold text-gray-800">Exam Over</h1><p class="text-gray-600 mt-4 text-lg">The time for the written exam has concluded.</p><div class="mt-6 p-6 bg-blue-50 border-l-4 border-blue-500 text-left"><h2 class="font-bold text-xl text-blue-800 mb-2">WhatsApp Submission Instructions</h2><p class="text-blue-700">You must submit your written answer sheet by taking clear photos and sending them to the official WhatsApp number within <strong>10 minutes</strong>.</p></div></div>`;
+            examScreen.classList.add('hidden');
             
-            const endScreen = document.createElement('div');
-            endScreen.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4';
-            endScreen.innerHTML = endScreenContent;
-
-            document.body.innerHTML = '';
-            document.body.appendChild(endScreen);
+            const endScreenHTML = isDisqualified
+                ? `<div class="text-center p-12 bg-white rounded-lg shadow-xl"><h1 class="text-3xl font-bold text-red-600">Exam Terminated</h1><p class="text-gray-600 mt-4 text-lg">${reason}</p><p class="mt-2 font-bold">Your session has been locked.</p></div>`
+                : `<div class="text-center p-12 bg-white rounded-lg shadow-xl max-w-2xl"><h1 class="text-3xl font-bold text-gray-800">Exam Over</h1><p class="text-gray-600 mt-4 text-lg">The time has concluded.</p><div class="mt-6 p-6 bg-blue-50 border-l-4 border-blue-500 text-left"><h2 class="font-bold text-xl text-blue-800 mb-2">WhatsApp Submission Instructions</h2><p class="text-blue-700">Submit your written answer sheet by sending clear photos to the official WhatsApp number within <strong>10 minutes</strong>.</p></div></div>`;
+            
+            endScreenOverlay.innerHTML = endScreenHTML;
+            endScreenOverlay.classList.remove('hidden');
 
             if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
         }
 
-        // --- Student Status Simulation ---
-        function updateStudentStatus(status, extraData = {}) {
-            if (!currentStudent.id) return;
-            const key = `student_status_${currentStudent.id}`;
-            const existingData = JSON.parse(localStorage.getItem(key)) || {};
-            const data = {
-                ...existingData,
-                id: currentStudent.id,
-                name: currentStudent.name,
-                class: currentStudent.class,
-                status,
-                violations: violationCounter,
-                lastUpdate: new Date().toISOString(),
-                ...extraData
-            };
-            localStorage.setItem(key, JSON.stringify(data));
+        async function updateStudentStatus(status, extraData = {}) {
+            if (!currentStudent.id || !db) return;
+            try {
+                const studentDocRef = doc(db, "artifacts", appId, "public", "data", "student_status", currentStudent.id);
+                await setDoc(studentDocRef, {
+                    id: currentStudent.id,
+                    name: currentStudent.name,
+                    class: currentStudent.class,
+                    status,
+                    violations: violationCounter,
+                    lastUpdate: new Date().toISOString(),
+                    ...extraData
+                }, { merge: true });
+            } catch (error) {
+                handleFirebaseError(error, "updateStudentStatus");
+            }
         }
 
-        // --- Admin Functions ---
         function switchAdminTab(tabName) {
-            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(`${tabName}-tab`).classList.add('active');
             document.getElementById(`${tabName}-content`).classList.add('active');
         }
 
-        function handleAdminLogin() {
+        async function handleAdminLogin() {
             if (adminPasswordInput.value === ADMIN_PASSWORD) {
                 adminLoginScreen.classList.add('hidden');
                 adminPanelScreen.classList.remove('hidden');
-                loadAdminConfig();
+                await loadAdminConfig();
                 startAdminMonitoring();
             } else {
                 adminLoginError.classList.remove('hidden');
             }
         }
 
-        function loadAdminConfig() {
-            const config = getExamConfig();
+        async function loadAdminConfig() {
+            const config = await getExamConfig();
             examDurationInput.value = config.duration;
             adminTempQuestions[9] = config.questionBankClass9.questions;
             adminTempQuestions[10] = config.questionBankClass10.questions;
@@ -841,23 +828,26 @@
         }
 
         function renderAdminQuestionLists() {
-            const list9 = document.getElementById('admin-questions-list-class9');
-            const list10 = document.getElementById('admin-questions-list-class10');
-            
-            list9.innerHTML = adminTempQuestions[9].map((q, i) => createQuestionListItem(q, 9, i)).join('');
-            list10.innerHTML = adminTempQuestions[10].map((q, i) => createQuestionListItem(q, 10, i)).join('');
+            ['9', '10'].forEach(classNum => {
+                const listEl = document.getElementById(`admin-questions-list-class${classNum}`);
+                listEl.innerHTML = (adminTempQuestions[classNum] || []).map((q, i) => createQuestionListItem(q, classNum, i)).join('');
+                listEl.querySelectorAll('.remove-question-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const classNum = e.currentTarget.dataset.classNum;
+                        const index = parseInt(e.currentTarget.dataset.index, 10);
+                        removeQuestion(classNum, index);
+                    });
+                });
+            });
         }
 
         function createQuestionListItem(q, classNum, index) {
-            const content = q.type === 'image'
-                ? `<img src="${q.content}" class="h-12 w-auto rounded-md">`
-                : `<p class="truncate text-gray-600">${q.content}</p>`;
             return `<div class="flex items-center justify-between p-2 bg-white border-b">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 overflow-hidden">
                             <span class="font-bold text-gray-500">${index + 1}.</span>
-                            ${content}
+                            ${q.type === 'image' ? `<img src="${q.content}" class="h-12 w-auto rounded-md">` : `<p class="truncate text-gray-600" title="${q.content}">${q.content}</p>`}
                         </div>
-                        <button class="text-red-500 hover:text-red-700 font-bold" onclick="removeQuestion(${classNum}, ${index})">X</button>
+                        <button class="remove-question-btn text-red-500 hover:text-red-700 font-bold p-2" data-class-num="${classNum}" data-index="${index}">&#x2715;</button>
                     </div>`;
         }
 
@@ -869,10 +859,9 @@
 
         function handleAddTextQuestion(event) {
             const classNum = event.target.dataset.target;
-            const textarea = document.getElementById(`admin-new-question-${classNum}`);
-            const text = textarea.value.trim();
-            if (text) {
-                adminTempQuestions[classNum].push({ id: Date.now(), type: 'text', content: text, userAnswer: "", status: "not-answered" });
+            const textarea = document.getElementById(`admin-new-question-class${classNum}`);
+            if (textarea.value.trim()) {
+                adminTempQuestions[classNum].push({ id: Date.now(), type: 'text', content: textarea.value.trim() });
                 textarea.value = '';
                 setAdminDirtyState(true);
                 renderAdminQuestionLists();
@@ -881,128 +870,179 @@
         
         function handleImageUpload(event, classNum) {
             const file = event.target.files[0];
+            const feedbackEl = document.getElementById(`image-upload-feedback-${classNum}`);
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                adminTempQuestions[classNum].push({ id: Date.now(), type: 'image', content: e.target.result, userAnswer: "", status: "not-answered" });
+
+            const img = new Image();
+            img.onload = () => {
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 600;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                
+                adminTempQuestions[classNum].push({ id: Date.now(), type: 'image', content: dataUrl });
                 setAdminDirtyState(true);
                 renderAdminQuestionLists();
+                URL.revokeObjectURL(img.src);
             };
-            reader.readAsDataURL(file);
+            img.onerror = () => {
+                if(feedbackEl) {
+                    feedbackEl.textContent = "Error: Invalid or corrupted image file.";
+                    setTimeout(() => { if(feedbackEl) feedbackEl.textContent = ""; }, 3000);
+                }
+                URL.revokeObjectURL(img.src);
+            };
+            img.src = URL.createObjectURL(file);
             event.target.value = null; // Reset file input
         }
 
         function setAdminDirtyState(isDirty) {
             isAdminConfigDirty = isDirty;
-            if (isDirty) {
-                adminSaveBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-                adminSaveBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'animate-pulse');
-                adminSaveBtn.textContent = 'Save Unsaved Changes';
-            } else {
-                adminSaveBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
-                adminSaveBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'animate-pulse');
-                adminSaveBtn.textContent = 'Save All Settings & Questions';
+            adminSaveBtn.classList.toggle('bg-indigo-600', !isDirty);
+            adminSaveBtn.classList.toggle('hover:bg-indigo-700', !isDirty);
+            adminSaveBtn.classList.toggle('bg-yellow-500', isDirty);
+            adminSaveBtn.classList.toggle('hover:bg-yellow-600', isDirty);
+            adminSaveBtn.classList.toggle('animate-pulse', isDirty);
+            adminSaveBtn.textContent = isDirty ? 'Save Unsaved Changes' : 'Save All Settings & Questions';
+        }
+
+        async function handleAdminSave() {
+            try {
+                const config = {
+                    duration: parseInt(examDurationInput.value, 10) || 60,
+                    questionBankClass9: { subject: 'Science', questions: adminTempQuestions[9] },
+                    questionBankClass10: { subject: 'Mathematics', questions: adminTempQuestions[10] }
+                };
+                await setDoc(doc(db, "artifacts", appId, "public", "data", "exam", "config"), config);
+                adminSaveFeedback.textContent = 'Settings saved to cloud database!';
+                setAdminDirtyState(false);
+                setTimeout(() => { adminSaveFeedback.textContent = ''; }, 3000);
+            } catch (error) {
+                handleFirebaseError(error, "handleAdminSave");
             }
         }
 
-        function handleAdminSave() {
-            const config = {
-                duration: parseInt(examDurationInput.value, 10) || 60,
-                questionBankClass9: { subject: 'Science', questions: adminTempQuestions[9] },
-                questionBankClass10: { subject: 'Mathematics', questions: adminTempQuestions[10] }
-            };
-            localStorage.setItem('examConfig', JSON.stringify(config));
-            adminSaveFeedback.textContent = 'Settings saved successfully!';
-            setAdminDirtyState(false);
-            setTimeout(() => { adminSaveFeedback.textContent = ''; }, 3000);
+        async function getExamConfig() {
+            const docRef = doc(db, "artifacts", appId, "public", "data", "exam", "config");
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) return docSnap.data();
+                
+                console.log("No config in DB, creating one.");
+                const defaultConfig = {
+                    duration: 60,
+                    questionBankClass9: defaultQuestionBankClass9,
+                    questionBankClass10: defaultQuestionBankClass10
+                };
+                await setDoc(docRef, defaultConfig);
+                return defaultConfig;
+            } catch (error) {
+                handleFirebaseError(error, "getExamConfig");
+                // Return defaults as a fallback
+                return { duration: 60, questionBankClass9: defaultQuestionBankClass9, questionBankClass10: defaultQuestionBankClass10 };
+            }
         }
-
-        function getExamConfig() {
-            const stored = localStorage.getItem('examConfig');
-            if (stored) return JSON.parse(stored);
-            return {
-                duration: 60,
-                questionBankClass9: defaultQuestionBankClass9,
-                questionBankClass10: defaultQuestionBankClass10
-            };
-        }
-
+        
         function startAdminMonitoring() {
-            if (adminMonitoringInterval) clearInterval(adminMonitoringInterval);
-            updateMonitoringDashboard(); // Initial call
-            adminMonitoringInterval = setInterval(updateMonitoringDashboard, 5000);
-        }
-
-        function updateMonitoringDashboard() {
-            const studentIds = ['SIRIL09', 'SAM10'];
-            studentMonitoringGrid.innerHTML = ''; // Clear previous state
-            studentIds.forEach(id => {
-                const data = JSON.parse(localStorage.getItem(`student_status_${id}`));
-                studentMonitoringGrid.insertAdjacentHTML('beforeend', createStudentCard(data, id));
+            ['SIRIL09', 'SAM10'].forEach(id => {
+                const docRef = doc(db, "artifacts", appId, "public", "data", "student_status", id);
+                onSnapshot(docRef, (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : null;
+                    const existingCard = document.getElementById(`student-card-${id}`);
+                    const newCardHTML = createStudentCard(data, id);
+                    if (existingCard) {
+                        if (existingCard.outerHTML !== newCardHTML) {
+                            existingCard.outerHTML = newCardHTML;
+                        }
+                    } else {
+                        studentMonitoringGrid.insertAdjacentHTML('beforeend', newCardHTML);
+                    }
+                }, (error) => {
+                    handleFirebaseError(error, `startAdminMonitoring for student ${id}`);
+                });
             });
         }
 
         function createStudentCard(data, id) {
-            if (!data) { // Handle case where student hasn't started
-                const name = (id === 'SIRIL09' ? 'Siril' : 'Sam');
-                return `<div class="bg-gray-100 p-4 rounded-lg border">
-                            <h3 class="font-bold text-lg">${name}</h3>
-                            <p class="text-gray-500">Offline</p>
-                        </div>`;
+            const cardId = `student-card-${id}`;
+            const name = data ? data.name : (id === 'SIRIL09' ? 'Siril' : 'Sam');
+            if (!data) {
+                return `<div id="${cardId}" class="bg-gray-100 p-4 rounded-lg border"><h3 class="font-bold text-lg">${name}</h3><p class="text-gray-500">Offline</p></div>`;
             }
 
             let statusColor = 'text-gray-500';
             if (data.status === 'In Progress') statusColor = 'text-blue-500 animate-pulse';
             if (data.status === 'Finished') statusColor = 'text-green-500';
             if (data.status === 'Disqualified') statusColor = 'text-red-500';
+            
+            const bgStatusColor = statusColor.replace('text-', 'bg-').replace('-500', '-100');
+            const isDisabled = !['Finished', 'Disqualified'].includes(data.status);
+            const disabledAttr = isDisabled ? 'disabled' : '';
+            const violationsColor = data.violations > 0 ? 'text-red-500' : '';
 
-            return `<div class="bg-white p-4 rounded-lg shadow-md border">
+            return `<div id="${cardId}" class="bg-white p-4 rounded-lg shadow-md border">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-xl">${data.name} (Class ${data.class})</h3>
-                            <span class="font-semibold px-3 py-1 rounded-full text-sm ${statusColor.replace('text-', 'bg-').replace('-500', '-100')} ${statusColor}">${data.status}</span>
+                            <span class="font-semibold px-3 py-1 rounded-full text-sm ${bgStatusColor} ${statusColor}">${data.status}</span>
                         </div>
                         <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                            <div>
-                                <p class="text-sm text-gray-500">Time Left</p>
-                                <p class="font-bold text-lg">${data.timeLeft || '--:--'}</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-500">Violations</p>
-                                <p class="font-bold text-lg ${data.violations > 0 ? 'text-red-500' : ''}">${data.violations}</p>
-                            </div>
+                            <div><p class="text-sm text-gray-500">Time Left</p><p class="font-bold text-lg">${data.timeLeft || '--:--'}</p></div>
+                            <div><p class="text-sm text-gray-500">Violations</p><p class="font-bold text-lg ${violationsColor}">${data.violations}</p></div>
                         </div>
                         <div class="mt-4">
-                            <button class="w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50" 
-                                    onclick="viewAnswers('${data.id}')" 
-                                    ${data.status !== 'Finished' && data.status !== 'Disqualified' ? 'disabled' : ''}>
+                            <button class="w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed view-answers-btn" 
+                                    data-student-id="${id}" ${disabledAttr}>
                                 View Answers
                             </button>
                         </div>
                     </div>`;
         }
 
-        function viewAnswers(studentId) {
-            const data = JSON.parse(localStorage.getItem(`student_status_${studentId}`));
-            if (!data || !data.answers) {
-                alert("No answer data found for this student.");
-                return;
+        async function viewAnswers(studentId) {
+            try {
+                const docRef = doc(db, "artifacts", appId, "public", "data", "student_status", studentId);
+                const docSnap = await getDoc(docRef);
+                const data = docSnap.exists() ? docSnap.data() : null;
+                
+                answersModalTitle.textContent = `Answers for ${data ? data.name : studentId}`;
+                if (!data || !data.answers || data.answers.length === 0) {
+                    answersModalContent.innerHTML = `<p class="text-gray-600">No answer data has been recorded for this student yet.</p>`;
+                } else {
+                    answersModalContent.innerHTML = data.answers.map((q, i) => `
+                        <div class="mb-4 pb-4 border-b last:border-b-0">
+                            <p class="font-bold text-gray-800">Question ${i + 1}:</p>
+                            ${q.type === 'image' ? `<img src="${q.content}" class="max-w-xs h-auto rounded-md my-2 border">` : `<p class="font-semibold text-gray-700">${q.content}</p>`}
+                            <p class="mt-2 p-3 bg-gray-100 rounded-md text-gray-800 whitespace-pre-wrap">${q.userAnswer.trim() ? q.userAnswer : '<i class="text-gray-500">No answer provided.</i>'}</p>
+                        </div>`).join('');
+                }
+                viewAnswersModal.classList.remove('hidden');
+            } catch (error) {
+                handleFirebaseError(error, `viewAnswers for student ${studentId}`);
             }
-            answersModalTitle.textContent = `Answers for ${data.name}`;
-            answersModalContent.innerHTML = data.answers.map((q, i) => {
-                const qContent = q.type === 'image'
-                    ? `<img src="${q.content}" class="max-w-xs h-auto rounded-md my-2">`
-                    : `<p class="font-semibold text-gray-700">${q.content}</p>`;
-
-                return `<div class="mb-4 pb-4 border-b">
-                            <p class="font-bold">Question ${i + 1}:</p>
-                            ${qContent}
-                            <p class="mt-2 p-2 bg-gray-100 rounded-md text-gray-800">${q.userAnswer || '<i>No answer provided.</i>'}</p>
-                        </div>`;
-            }).join('');
-            viewAnswersModal.classList.remove('hidden');
         }
 
-    </script>
+        // Start the application
+        main();
 
+    </script>
 </body>
 </html>
