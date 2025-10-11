@@ -10,6 +10,11 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f2f5;
+            /* Disable text selection throughout the page */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standard */
         }
         .guidelines ul {
             list-style-position: inside;
@@ -37,6 +42,19 @@
              box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
              border-color: #3b82f6;
              outline: none;
+        }
+        /* Allow text selection only in textareas */
+        textarea {
+            -webkit-user-select: auto;
+            -moz-user-select: auto;
+            -ms-user-select: auto;
+            user-select: auto;
+        }
+        /* Hide content when printing */
+        @media print {
+          body {
+            visibility: hidden;
+          }
         }
     </style>
 </head>
@@ -138,7 +156,7 @@
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Identity Verification</h2>
             <p class="text-gray-600 mb-6">Please hold your government-issued photo ID clearly in front of the camera.</p>
             <div class="relative w-full max-w-lg mx-auto mb-6 rounded-lg overflow-hidden shadow-inner border">
-                <video id="webcam-preview" autoplay playsinline class="w-full h-auto"></video>
+                <video id="webcam-preview" autoplay playsinline muted class="w-full h-auto"></video>
                 <canvas id="id-canvas" class="hidden"></canvas>
             </div>
             <button id="capture-id-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors shadow-md">
@@ -147,6 +165,17 @@
             <div id="id-capture-feedback" class="mt-4"></div>
         </div>
         
+        <!-- 3.5 Pre-Exam Lobby Screen -->
+        <div id="pre-exam-lobby-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Final Step Before Starting</h2>
+            <p class="text-gray-600 mb-6">A new window has opened for the Google Meet proctoring session. Please join the meeting now.</p>
+            <p class="text-gray-600 mb-8 font-semibold">Once you have successfully joined the meeting, click the button below to start your exam.</p>
+            <button id="start-exam-now-btn" class="bg-green-600 text-white font-bold py-3 px-12 rounded-lg hover:bg-green-700 transition-colors shadow-lg animate-pulse">
+                I have joined the meeting, Start Exam
+            </button>
+            <p class="text-sm text-gray-500 mt-6">Do not close the Google Meet window during the exam.</p>
+        </div>
+
         <!-- 4. Exam Screen -->
         <div id="exam-screen" class="hidden p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow-xl">
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b">
@@ -176,7 +205,7 @@
                         </div>
                         <p class="text-xs text-center mt-2 text-gray-400">Your webcam and microphone are being recorded.</p>
                          <div class="mt-2 text-center">
-                            <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 3</p>
+                            <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 5</p>
                         </div>
                     </div>
                      <div class="bg-gray-50 p-4 rounded-lg">
@@ -193,13 +222,18 @@
         </div>
 
         <!-- Blocking overlay for violations -->
-        <div id="violation-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div id="violation-overlay" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50" data-violation-type="">
             <div class="text-center text-white p-12 rounded-lg">
                 <h2 class="text-4xl font-bold text-yellow-400 mb-4">Warning!</h2>
                 <p id="violation-message" class="text-xl mb-2"></p>
                 <p class="text-lg">Please resolve the issue immediately.</p>
                 <p id="violation-count-message" class="mt-6 text-2xl font-bold text-red-500"></p>
             </div>
+        </div>
+        
+        <!-- Screenshot Blackout Overlay -->
+        <div id="screenshot-overlay" class="hidden fixed inset-0 bg-black flex items-center justify-center z-[100]">
+            <h2 class="text-4xl font-bold text-white">Screenshots are not permitted.</h2>
         </div>
 
         <!-- Custom Confirmation Modal for Submission -->
@@ -223,6 +257,7 @@
         const agreeBtn = document.getElementById('agree-btn');
         const permissionsScreen = document.getElementById('permissions-screen');
         const idVerificationScreen = document.getElementById('id-verification-screen');
+        const preExamLobbyScreen = document.getElementById('pre-exam-lobby-screen');
         const examScreen = document.getElementById('exam-screen');
         const grantPermissionsBtn = document.getElementById('grant-permissions-btn');
         const permissionsError = document.getElementById('permissions-error');
@@ -231,10 +266,12 @@
         const captureIdBtn = document.getElementById('capture-id-btn');
         const idCanvas = document.getElementById('id-canvas');
         const idCaptureFeedback = document.getElementById('id-capture-feedback');
+        const startExamNowBtn = document.getElementById('start-exam-now-btn');
         const timerEl = document.getElementById('timer');
         const violationOverlay = document.getElementById('violation-overlay');
         const violationMessage = document.getElementById('violation-message');
         const violationCountMessage = document.getElementById('violation-count-message');
+        const screenshotOverlay = document.getElementById('screenshot-overlay');
         const questionContainer = document.getElementById('question-container');
         const questionPalette = document.getElementById('question-palette');
         const prevQuestionBtn = document.getElementById('prev-question-btn');
@@ -266,12 +303,19 @@
         const EXAM_DURATION_SECONDS = 60 * 60; // 60 minutes
         const RECORDING_CHUNK_INTERVAL_MS = 20 * 1000;
         const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs";
-        const MAX_VIOLATIONS = 3;
-        const AUDIO_THRESHOLD = 50; // Sensitivity for sound detection (0-255)
-        const ADMIN_PASSWORD = "admin123"; // Super secret password
+        const MAX_VIOLATIONS = 5; // Increased to 5
+        const AUDIO_THRESHOLD = 60; // Increased sensitivity slightly for ambient noise
+        const SUSTAINED_NOISE_LIMIT = 2; // Requires 2 consecutive checks of loud noise
+        const ADMIN_PASSWORD = "admin123"; 
         let violationCounter = 0;
         let currentQuestionIndex = 0;
         let timerInterval, monitoringInterval;
+
+        // State flags for violation tracking to prevent repeated triggers
+        let isCameraWarningActive = false;
+        let isSoundWarningActive = false;
+        let isTabSwitchWarningActive = false;
+        let sustainedSoundCount = 0;
 
 
         // --- Default Question Banks ---
@@ -309,6 +353,7 @@
         });
         grantPermissionsBtn.addEventListener('click', requestPermissions);
         captureIdBtn.addEventListener('click', captureId);
+        startExamNowBtn.addEventListener('click', startExam);
         document.addEventListener('visibilitychange', handleVisibilityChange);
         prevQuestionBtn.addEventListener('click', showPreviousQuestion);
         nextQuestionBtn.addEventListener('click', showNextQuestion);
@@ -375,13 +420,25 @@
             context.drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
             idCanvas.toBlob(blob => console.log("ID Image captured, size:", blob.size), 'image/jpeg');
             idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID Captured Successfully!</p>
-                <button id="start-exam-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed to Exam</button>`;
-            document.getElementById('start-exam-btn').addEventListener('click', startExam);
+                <button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed to Final Step</button>`;
+            document.getElementById('proceed-to-lobby-btn').addEventListener('click', showLobby);
             captureIdBtn.disabled = true;
         }
 
-        function startExam() {
+        function showLobby() {
             idVerificationScreen.classList.add('hidden');
+            preExamLobbyScreen.classList.remove('hidden');
+
+            const subject = currentStudent.class === '9' 
+                ? (JSON.parse(localStorage.getItem('questionBankClass9'))?.subject || defaultQuestionBankClass9.subject)
+                : (JSON.parse(localStorage.getItem('questionBankClass10'))?.subject || defaultQuestionBankClass10.subject);
+            
+            const meetUrl = `${PROCTOR_MEET_LINK}?examId=${subject.toUpperCase()}&cand=${currentStudent.id}`;
+            window.open(meetUrl, 'ProctoringSession', 'width=800,height=600');
+        }
+
+        function startExam() {
+            preExamLobbyScreen.classList.add('hidden');
             examScreen.classList.remove('hidden');
             proctorFeed.srcObject = mediaStream;
 
@@ -394,15 +451,18 @@
                 <p class="text-gray-500">Candidate: ${currentStudent.name} (Class: ${currentStudent.class})</p>
             `;
             
-            const meetUrl = `${PROCTOR_MEET_LINK}?examId=${subject.toUpperCase()}&cand=${currentStudent.id}`;
-            window.open(meetUrl, 'ProctoringSession', 'width=800,height=600');
-            
             // Security Enhancements
             enterFullScreen();
             document.addEventListener('contextmenu', event => event.preventDefault());
             document.addEventListener('copy', event => event.preventDefault());
             document.addEventListener('keydown', (e) => {
-                 // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+                if (e.key === 'PrintScreen') {
+                    e.preventDefault();
+                    flashScreenshotWarning();
+                }
+                if (e.ctrlKey && e.key === 'p') {
+                    e.preventDefault();
+                }
                 if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
                     e.preventDefault();
                 }
@@ -509,9 +569,16 @@
                 });
             }
         }
+        
+        function flashScreenshotWarning() {
+            screenshotOverlay.classList.remove('hidden');
+            triggerViolation('screenshot', 'Screenshot attempt detected.');
+            setTimeout(() => {
+                screenshotOverlay.classList.add('hidden');
+            }, 2000); // Hide after 2 seconds
+        }
 
         function startMonitoring() {
-            // 1. Setup Audio Monitoring
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 audioAnalyser = audioContext.createAnalyser();
@@ -520,34 +587,52 @@
                 audioAnalyser.fftSize = 256;
             } catch (e) { console.error("Could not set up audio monitoring:", e); }
 
-            // 2. Run periodic checks
             monitoringInterval = setInterval(() => {
+                // Camera check
                 const videoTrack = mediaStream.getVideoTracks()[0];
-                if (!videoTrack || videoTrack.muted || !videoTrack.enabled) {
-                    triggerViolation("Camera is off or obscured.");
+                if ((!videoTrack || videoTrack.muted || !videoTrack.enabled) && !isCameraWarningActive) {
+                    triggerViolation("camera", "Camera is off or obscured.");
+                    isCameraWarningActive = true;
+                } else if (videoTrack && !videoTrack.muted && videoTrack.enabled && isCameraWarningActive) {
+                    resolveViolation("camera");
+                    isCameraWarningActive = false;
                 }
 
+                // Audio check for sustained noise
                 if (audioAnalyser) {
                     const dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
                     audioAnalyser.getByteFrequencyData(dataArray);
-                    let sum = dataArray.reduce((a, b) => a + b, 0);
-                    let average = sum / dataArray.length;
+                    let average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+                    
                     if (average > AUDIO_THRESHOLD) {
-                        triggerViolation("Loud noise or multiple voices detected.");
+                        sustainedSoundCount++;
+                    } else {
+                        sustainedSoundCount = 0;
+                        if (isSoundWarningActive) {
+                           resolveViolation("sound");
+                           isSoundWarningActive = false;
+                        }
+                    }
+
+                    if (sustainedSoundCount >= SUSTAINED_NOISE_LIMIT && !isSoundWarningActive) {
+                        triggerViolation("sound", "Loud noise or multiple voices detected.");
+                        isSoundWarningActive = true;
                     }
                 }
-            }, 3000);
+            }, 1500); // Check more frequently
         }
 
         function handleVisibilityChange() {
-             if (document.hidden && !examScreen.classList.contains('hidden')) {
-                triggerViolation("You have switched away from the exam tab.");
-            } else {
-                violationOverlay.classList.add('hidden');
+             if (document.hidden && !examScreen.classList.contains('hidden') && !isTabSwitchWarningActive) {
+                triggerViolation("tab", "You have switched away from the exam tab.");
+                isTabSwitchWarningActive = true;
+            } else if (!document.hidden && isTabSwitchWarningActive) {
+                resolveViolation("tab");
+                isTabSwitchWarningActive = false;
             }
         }
 
-        function triggerViolation(message) {
+        function triggerViolation(type, message) {
             if (examScreen.classList.contains('hidden')) return;
             violationCounter++;
             violationCounterEl.textContent = violationCounter;
@@ -560,13 +645,25 @@
                 violationType: message,
                 violationCount: violationCounter
             });
+            
+            if(type !== 'screenshot'){
+                violationOverlay.dataset.violationType = type;
+                violationMessage.textContent = message;
+                violationCountMessage.textContent = `Violations: ${violationCounter} of ${MAX_VIOLATIONS}`;
+                violationOverlay.classList.remove('hidden');
+            }
 
-            violationMessage.textContent = message;
-            violationCountMessage.textContent = `Violations: ${violationCounter} of ${MAX_VIOLATIONS}`;
-            violationOverlay.classList.remove('hidden');
 
-            if (violationCounter > MAX_VIOLATIONS) {
-                endExam("Disqualified due to multiple violations.");
+            if (violationCounter >= MAX_VIOLATIONS) {
+                endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
+            }
+        }
+
+        function resolveViolation(type) {
+            // Only hide the overlay if it's showing the warning for the issue that was just resolved.
+            if (violationOverlay.dataset.violationType === type) {
+                violationOverlay.classList.add('hidden');
+                violationOverlay.dataset.violationType = "";
             }
         }
         
