@@ -938,8 +938,8 @@
             try {
                 const config = {
                     duration: parseInt(examDurationInput.value, 10) || 60,
-                    questionBankClass9: { subject: 'Science', questions: adminTempQuestions[9] },
-                    questionBankClass10: { subject: 'Mathematics', questions: adminTempQuestions[10] }
+                    questionBankClass9: { subject: 'Social Science', questions: adminTempQuestions[9] },
+                    questionBankClass10: { subject: 'Social Science', questions: adminTempQuestions[10] }
                 };
                 await setDoc(doc(db, "artifacts", appId, "public", "data", "exam", "config"), config);
                 adminSaveFeedback.textContent = 'Settings saved to cloud database!';
