@@ -51,6 +51,7 @@
         .admin-tab.active { border-color: #3b82f6; color: #3b82f6; font-weight: 600; }
         .admin-tab-content { display: none; }
         .admin-tab-content.active { display: block; }
+        .proctor-video { background-color: #000; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen bg-gray-100">
@@ -121,7 +122,7 @@
                 </div>
             </div>
             <div id="monitoring-content" class="admin-tab-content">
-                <p class="text-sm text-gray-500 mb-4 bg-green-50 p-3 rounded-lg border border-green-200">This dashboard is connected to the live database. Status updates from all students will appear here in real-time.</p>
+                <p class="text-sm text-gray-500 mb-4 bg-green-50 p-3 rounded-lg border border-green-200">This dashboard provides a live proctoring feed from each student. Status updates will appear here in real-time.</p>
                 <div id="student-monitoring-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
         </div>
@@ -143,7 +144,7 @@
                 <p class="font-bold mt-6">By clicking “I Agree”, you give consent for:</p>
                 <ul class="list-disc mt-2">
                     <li>Camera and microphone access</li>
-                    <li>Live monitoring and recording</li>
+                    <li>Live monitoring and recording for proctoring purposes</li>
                     <li>Data being used for exam verification purposes only</li>
                 </ul>
             </div>
@@ -179,16 +180,6 @@
                 Capture ID
             </button>
             <div id="id-capture-feedback" class="mt-4"></div>
-        </div>
-        
-        <div id="pre-exam-lobby-screen" class="hidden text-center p-8 bg-white rounded-2xl shadow-xl">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Final Step Before Starting</h2>
-            <p class="text-gray-600 mb-6">A new window has opened for the Google Meet proctoring session. Please join the meeting now.</p>
-            <p class="text-gray-600 mb-8 font-semibold">Once you have successfully joined the meeting, click the button below to start your exam.</p>
-            <button id="start-exam-now-btn" class="bg-green-600 text-white font-bold py-3 px-12 rounded-lg hover:bg-green-700 transition-colors shadow-lg animate-pulse">
-                I have joined the meeting, Start Exam
-            </button>
-            <p class="text-sm text-gray-500 mt-6">Do not close the Google Meet window during the exam.</p>
         </div>
 
         <div id="exam-screen" class="hidden p-4 sm:p-6 md:p-8 bg-white rounded-2xl shadow-xl">
@@ -305,7 +296,7 @@
     <script type="module">
         // Using latest Firebase v11+ SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, setLogLevel, collection, addDoc, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Global App ID for Firestore pathing
@@ -318,7 +309,6 @@
         const agreeBtn = document.getElementById('agree-btn');
         const permissionsScreen = document.getElementById('permissions-screen');
         const idVerificationScreen = document.getElementById('id-verification-screen');
-        const preExamLobbyScreen = document.getElementById('pre-exam-lobby-screen');
         const examScreen = document.getElementById('exam-screen');
         const grantPermissionsBtn = document.getElementById('grant-permissions-btn');
         const permissionsError = document.getElementById('permissions-error');
@@ -327,7 +317,6 @@
         const captureIdBtn = document.getElementById('capture-id-btn');
         const idCanvas = document.getElementById('id-canvas');
         const idCaptureFeedback = document.getElementById('id-capture-feedback');
-        const startExamNowBtn = document.getElementById('start-exam-now-btn');
         const timerEl = document.getElementById('timer');
         const violationOverlay = document.getElementById('violation-overlay');
         const violationMessage = document.getElementById('violation-message');
@@ -366,12 +355,14 @@
         let currentStudent = {};
         let questionBank = [];
         let mediaStream, mediaRecorder, recorderInterval, audioContext, audioSource, audioAnalyser;
+        let studentPeerConnection;
+        let adminPeerConnections = {};
+        let iceCandidateListeners = {};
         let recordedChunks = [];
         let examDurationSeconds = 3600;
-        const PROCTOR_MEET_LINK = "https://meet.google.com/owx-mgdw-uxs";
         const MAX_VIOLATIONS = 5;
-        const AUDIO_THRESHOLD = 75; // FIX: Increased threshold to ignore quieter sounds
-        const SUSTAINED_NOISE_LIMIT = 3; // FIX: Require noise for a longer duration
+        const AUDIO_THRESHOLD = 75; 
+        const SUSTAINED_NOISE_LIMIT = 3; 
         const ADMIN_PASSWORD = "admin123";
         let violationCounter = 0;
         let currentQuestionIndex = 0;
@@ -390,6 +381,10 @@
         const defaultQuestionBankClass10 = {
             subject: "Social Science",
             questions: [{ id: 1001, type: 'text', content: "Solve the quadratic equation: x² - 5x + 6 = 0.", userAnswer: "", status: "not-answered" }]
+        };
+
+        const rtcConfig = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
 
         // --- Main Application Entry Point ---
@@ -465,7 +460,7 @@
             });
             grantPermissionsBtn.addEventListener('click', requestPermissions);
             captureIdBtn.addEventListener('click', captureId);
-            startExamNowBtn.addEventListener('click', startExam);
+            
             document.addEventListener('visibilitychange', handleVisibilityChange);
             prevQuestionBtn.addEventListener('click', showPreviousQuestion);
             nextQuestionBtn.addEventListener('click', showNextQuestion);
@@ -544,19 +539,13 @@
             idCanvas.height = webcamPreview.videoHeight;
             idCanvas.getContext('2d').drawImage(webcamPreview, 0, 0, idCanvas.width, idCanvas.height);
             console.log("ID Captured");
-            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID captured!</p><button id="proceed-to-lobby-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Proceed</button>`;
-            document.getElementById('proceed-to-lobby-btn').addEventListener('click', showLobby);
+            idCaptureFeedback.innerHTML = `<p class="text-green-600 font-semibold">ID captured! You may now begin the exam.</p><button id="start-exam-btn" class="mt-4 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Exam</button>`;
+            document.getElementById('start-exam-btn').addEventListener('click', startExam);
             captureIdBtn.disabled = true;
         }
 
-        function showLobby() {
-            idVerificationScreen.classList.add('hidden');
-            preExamLobbyScreen.classList.remove('hidden');
-            window.open(PROCTOR_MEET_LINK, '_blank', 'noopener,noreferrer');
-        }
-
         async function startExam() {
-            preExamLobbyScreen.classList.add('hidden');
+            idVerificationScreen.classList.add('hidden');
             examScreen.classList.remove('hidden');
             proctorFeed.srcObject = mediaStream;
 
@@ -577,6 +566,7 @@
             });
 
             await updateStudentStatus('In Progress');
+            await startWebRTCStreamAsStudent();
             startTimer(examDurationSeconds);
             startRecording();
             startMonitoring();
@@ -641,7 +631,7 @@
                 ? ((question.userAnswer || '').trim() ? 'answered' : 'not-answered')
                 : 'marked-for-review';
             renderQuestion(currentQuestionIndex);
-            renderQuestionPalette(); // FIX: Explicitly re-render the palette
+            renderQuestionPalette();
         }
 
         function startTimer(duration) {
@@ -650,7 +640,7 @@
                 const minutes = Math.floor(timer / 60);
                 const seconds = timer % 60;
                 timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                if(timer % 30 === 0) { // Update status every 30 seconds to reduce writes
+                if(timer % 30 === 0) { 
                     await updateStudentStatus('In Progress', { timeLeft: timerEl.textContent });
                 }
                 if (--timer < 0) await endExam("Time's up!");
@@ -775,6 +765,11 @@
             clearInterval(monitoringInterval);
             clearInterval(recorderInterval);
             if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (studentPeerConnection) studentPeerConnection.close();
+            
+            const signalDocRef = doc(db, "artifacts", appId, "public", "data", "webrtc_signals", currentStudent.id);
+            await deleteDoc(signalDocRef).catch(e => console.error("Could not delete signal doc:", e));
+
 
             const isDisqualified = reason.includes("Disqualified");
             const status = isDisqualified ? "Disqualified" : "Finished";
@@ -966,15 +961,14 @@
                 return defaultConfig;
             } catch (error) {
                 handleFirebaseError(error, "getExamConfig");
-                // Return defaults as a fallback
                 return { duration: 60, questionBankClass9: defaultQuestionBankClass9, questionBankClass10: defaultQuestionBankClass10 };
             }
         }
         
         function startAdminMonitoring() {
             ['SIRIL09', 'SAM10'].forEach(id => {
-                const docRef = doc(db, "artifacts", appId, "public", "data", "student_status", id);
-                onSnapshot(docRef, (docSnap) => {
+                const statusDocRef = doc(db, "artifacts", appId, "public", "data", "student_status", id);
+                onSnapshot(statusDocRef, (docSnap) => {
                     const data = docSnap.exists() ? docSnap.data() : null;
                     const existingCard = document.getElementById(`student-card-${id}`);
                     const newCardHTML = createStudentCard(data, id);
@@ -985,9 +979,13 @@
                     } else {
                         studentMonitoringGrid.insertAdjacentHTML('beforeend', newCardHTML);
                     }
-                }, (error) => {
-                    handleFirebaseError(error, `startAdminMonitoring for student ${id}`);
-                });
+                    if (data && data.status !== 'In Progress' && adminPeerConnections[id]) {
+                        adminPeerConnections[id].close();
+                        delete adminPeerConnections[id];
+                    }
+                }, (error) => handleFirebaseError(error, `startAdminMonitoring for student ${id}`));
+                
+                initiateProctoringStreamForAdmin(id);
             });
         }
 
@@ -1008,16 +1006,19 @@
             const disabledAttr = isDisabled ? 'disabled' : '';
             const violationsColor = data.violations > 0 ? 'text-red-500' : '';
 
-            return `<div id="${cardId}" class="bg-white p-4 rounded-lg shadow-md border">
+            return `<div id="${cardId}" class="bg-white p-4 rounded-lg shadow-md border space-y-3">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-xl">${data.name} (Class ${data.class})</h3>
                             <span class="font-semibold px-3 py-1 rounded-full text-sm ${bgStatusColor} ${statusColor}">${data.status}</span>
                         </div>
-                        <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                        <div class="proctor-video-container aspect-w-4 aspect-h-3 rounded-lg overflow-hidden border">
+                           <video id="proctor-video-${id}" autoplay playsinline class="w-full h-full object-cover proctor-video"></video>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-center">
                             <div><p class="text-sm text-gray-500">Time Left</p><p class="font-bold text-lg">${data.timeLeft || '--:--'}</p></div>
                             <div><p class="text-sm text-gray-500">Violations</p><p class="font-bold text-lg ${violationsColor}">${data.violations}</p></div>
                         </div>
-                        <div class="mt-4">
+                        <div>
                             <button class="w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed view-answers-btn" 
                                     data-student-id="${id}" ${disabledAttr}>
                                 View Answers
@@ -1047,6 +1048,97 @@
             } catch (error) {
                 handleFirebaseError(error, `viewAnswers for student ${studentId}`);
             }
+        }
+
+        // --- WebRTC Functions ---
+        async function startWebRTCStreamAsStudent() {
+            const signalDocRef = doc(db, "artifacts", appId, "public", "data", "webrtc_signals", currentStudent.id);
+            const offerCandidatesRef = collection(signalDocRef, 'offerCandidates');
+            const answerCandidatesRef = collection(signalDocRef, 'answerCandidates');
+
+            studentPeerConnection = new RTCPeerConnection(rtcConfig);
+
+            mediaStream.getTracks().forEach(track => studentPeerConnection.addTrack(track, mediaStream));
+
+            studentPeerConnection.onicecandidate = event => {
+                if(event.candidate) {
+                    addDoc(offerCandidatesRef, event.candidate.toJSON());
+                }
+            };
+
+            const offerDescription = await studentPeerConnection.createOffer();
+            await studentPeerConnection.setLocalDescription(offerDescription);
+
+            const offer = {
+                sdp: offerDescription.sdp,
+                type: offerDescription.type,
+            };
+            await setDoc(signalDocRef, { offer });
+
+            onSnapshot(signalDocRef, (snapshot) => {
+                const data = snapshot.data();
+                if (!studentPeerConnection.currentRemoteDescription && data?.answer) {
+                    const answerDescription = new RTCSessionDescription(data.answer);
+                    studentPeerConnection.setRemoteDescription(answerDescription);
+                }
+            });
+
+            onSnapshot(answerCandidatesRef, snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const candidate = new RTCIceCandidate(change.doc.data());
+                        studentPeerConnection.addIceCandidate(candidate);
+                    }
+                });
+            });
+        }
+
+        function initiateProctoringStreamForAdmin(studentId) {
+            const signalDocRef = doc(db, "artifacts", appId, "public", "data", "webrtc_signals", studentId);
+            const offerCandidatesRef = collection(signalDocRef, 'offerCandidates');
+            const answerCandidatesRef = collection(signalDocRef, 'answerCandidates');
+
+            onSnapshot(signalDocRef, async (snapshot) => {
+                const data = snapshot.data();
+                if (data?.offer && !adminPeerConnections[studentId]) {
+                    console.log(`Admin received offer from ${studentId}`);
+                    const peerConnection = new RTCPeerConnection(rtcConfig);
+                    adminPeerConnections[studentId] = peerConnection;
+
+                    peerConnection.onicecandidate = event => {
+                        if (event.candidate) {
+                            addDoc(answerCandidatesRef, event.candidate.toJSON());
+                        }
+                    };
+                    
+                    peerConnection.ontrack = (event) => {
+                        const videoElement = document.getElementById(`proctor-video-${studentId}`);
+                        if (videoElement && videoElement.srcObject !== event.streams[0]) {
+                            videoElement.srcObject = event.streams[0];
+                            console.log(`Streaming video for ${studentId}`);
+                        }
+                    };
+
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                    const answerDescription = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answerDescription);
+
+                    const answer = {
+                        type: answerDescription.type,
+                        sdp: answerDescription.sdp,
+                    };
+                    await setDoc(signalDocRef, { answer }, { merge: true });
+
+                    if (iceCandidateListeners[studentId]) iceCandidateListeners[studentId]();
+                    iceCandidateListeners[studentId] = onSnapshot(offerCandidatesRef, (snapshot) => {
+                        snapshot.docChanges().forEach((change) => {
+                            if (change.type === 'added') {
+                                peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+                            }
+                        });
+                    });
+                }
+            });
         }
 
         // Start the application
