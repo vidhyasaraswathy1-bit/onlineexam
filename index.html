@@ -979,16 +979,49 @@
                 const statusDocRef = doc(db, "artifacts", appId, "public", "data", "student_status", id);
                 onSnapshot(statusDocRef, (docSnap) => {
                     const data = docSnap.exists() ? docSnap.data() : null;
-                    const existingCard = document.getElementById(`student-card-${id}`);
-                    const newCardHTML = createStudentCard(data, id);
-                    if (existingCard) {
-                        const videoSrc = existingCard.querySelector('video')?.srcObject;
-                        existingCard.outerHTML = newCardHTML;
-                        const newVideo = document.getElementById(`proctor-video-${id}`);
-                        if (newVideo && videoSrc) newVideo.srcObject = videoSrc;
-                    } else {
+                    let existingCard = document.getElementById(`student-card-${id}`);
+
+                    if (!existingCard) {
+                        const newCardHTML = createStudentCard(data, id);
                         studentMonitoringGrid.insertAdjacentHTML('beforeend', newCardHTML);
+                    } else {
+                        // Card exists, so update its contents without replacing the video element
+                        if (data) {
+                            const statusEl = existingCard.querySelector('.student-status');
+                            const timeLeftEl = existingCard.querySelector('.time-left');
+                            const violationsEl = existingCard.querySelector('.violations');
+                            const viewAnswersBtn = existingCard.querySelector('.view-answers-btn');
+
+                            let statusColor = 'text-gray-500';
+                            if (data.status === 'In Progress') statusColor = 'text-blue-500 animate-pulse';
+                            if (data.status === 'Finished') statusColor = 'text-green-500';
+                            if (data.status === 'Disqualified') statusColor = 'text-red-500';
+                            const bgStatusColor = statusColor.replace('text-', 'bg-').replace('-500', '-100');
+                            
+                            if (statusEl) {
+                                statusEl.textContent = data.status;
+                                statusEl.className = `font-semibold px-3 py-1 rounded-full text-sm student-status ${bgStatusColor} ${statusColor}`;
+                            }
+                            if (timeLeftEl) timeLeftEl.textContent = data.timeLeft || '--:--';
+                            
+                            if (violationsEl) {
+                                const violationsColor = data.violations > 0 ? 'text-red-500' : '';
+                                violationsEl.textContent = data.violations;
+                                violationsEl.className = `font-bold text-lg violations ${violationsColor}`;
+                            }
+
+                            if(viewAnswersBtn) {
+                                viewAnswersBtn.disabled = !['Finished', 'Disqualified'].includes(data.status);
+                            }
+                        } else {
+                             const statusEl = existingCard.querySelector('.student-status');
+                             if(statusEl) {
+                                statusEl.textContent = 'Offline';
+                                statusEl.className = 'text-gray-500 student-status';
+                             }
+                        }
                     }
+                    
                     if (data && data.status !== 'In Progress' && adminPeerConnections[id]) {
                         adminPeerConnections[id].close();
                         delete adminPeerConnections[id];
@@ -1003,7 +1036,7 @@
             const cardId = `student-card-${id}`;
             const name = data ? data.name : (id === 'SIRIL09' ? 'Siril' : 'Sam');
             if (!data) {
-                return `<div id="${cardId}" class="bg-gray-100 p-4 rounded-lg border"><h3 class="font-bold text-lg">${name}</h3><p class="text-gray-500">Offline</p></div>`;
+                return `<div id="${cardId}" class="bg-gray-100 p-4 rounded-lg border"><h3 class="font-bold text-lg">${name}</h3><p class="text-gray-500 student-status">Offline</p></div>`;
             }
 
             let statusColor = 'text-gray-500';
@@ -1019,14 +1052,14 @@
             return `<div id="${cardId}" class="bg-white p-4 rounded-lg shadow-md border space-y-3">
                         <div class="flex justify-between items-center">
                             <h3 class="font-bold text-xl">${data.name} (Class ${data.class})</h3>
-                            <span class="font-semibold px-3 py-1 rounded-full text-sm ${bgStatusColor} ${statusColor}">${data.status}</span>
+                            <span class="font-semibold px-3 py-1 rounded-full text-sm student-status ${bgStatusColor} ${statusColor}">${data.status}</span>
                         </div>
                         <div class="proctor-video-container aspect-w-4 aspect-h-3 rounded-lg overflow-hidden border">
                            <video id="proctor-video-${id}" autoplay playsinline class="w-full h-full object-cover proctor-video"></video>
                         </div>
                         <div class="grid grid-cols-2 gap-4 text-center">
-                            <div><p class="text-sm text-gray-500">Time Left</p><p class="font-bold text-lg">${data.timeLeft || '--:--'}</p></div>
-                            <div><p class="text-sm text-gray-500">Violations</p><p class="font-bold text-lg ${violationsColor}">${data.violations}</p></div>
+                            <div><p class="text-sm text-gray-500">Time Left</p><p class="font-bold text-lg time-left">${data.timeLeft || '--:--'}</p></div>
+                            <div><p class="text-sm text-gray-500">Violations</p><p class="font-bold text-lg violations ${violationsColor}">${data.violations}</p></div>
                         </div>
                         <div>
                             <button class="w-full bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed view-answers-btn" 
