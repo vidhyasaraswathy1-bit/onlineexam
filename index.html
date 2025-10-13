@@ -360,8 +360,12 @@
         let iceCandidateListeners = {};
         let recordedChunks = [];
         let examDurationSeconds = 3600;
+        let lastWarningTimestamp = 0;
         const MAX_VIOLATIONS = 5;
+        // --- Proctoring Sensitivity ---
+        // AUDIO_THRESHOLD: How loud a sound has to be (0-255). Higher = less sensitive.
         const AUDIO_THRESHOLD = 75; 
+        // SUSTAINED_NOISE_LIMIT: How many consecutive checks the sound must be loud. Higher = less sensitive.
         const SUSTAINED_NOISE_LIMIT = 3; 
         const ADMIN_PASSWORD = "admin123";
         let violationCounter = 0;
@@ -481,9 +485,13 @@
             document.querySelectorAll('.add-text-btn').forEach(btn => btn.addEventListener('click', handleAddTextQuestion));
             document.getElementById('image-upload-9').addEventListener('change', (e) => handleImageUpload(e, 9));
             document.getElementById('image-upload-10').addEventListener('change', (e) => handleImageUpload(e, 10));
+            
             studentMonitoringGrid.addEventListener('click', (e) => {
                 if (e.target.closest('.view-answers-btn')) {
                     viewAnswers(e.target.closest('.view-answers-btn').dataset.studentId);
+                }
+                if (e.target.closest('.send-warning-btn')) {
+                    handleSendAdminWarning(e.target.closest('.send-warning-btn').dataset.studentId);
                 }
             });
         }
@@ -567,6 +575,7 @@
 
             await updateStudentStatus('In Progress');
             await startWebRTCStreamAsStudent();
+            listenForAdminWarnings();
             startTimer(examDurationSeconds);
             startRecording();
             startMonitoring();
@@ -973,9 +982,10 @@
                     const existingCard = document.getElementById(`student-card-${id}`);
                     const newCardHTML = createStudentCard(data, id);
                     if (existingCard) {
-                        if (existingCard.outerHTML !== newCardHTML) {
-                            existingCard.outerHTML = newCardHTML;
-                        }
+                        const videoSrc = existingCard.querySelector('video')?.srcObject;
+                        existingCard.outerHTML = newCardHTML;
+                        const newVideo = document.getElementById(`proctor-video-${id}`);
+                        if (newVideo && videoSrc) newVideo.srcObject = videoSrc;
                     } else {
                         studentMonitoringGrid.insertAdjacentHTML('beforeend', newCardHTML);
                     }
@@ -1024,7 +1034,69 @@
                                 View Answers
                             </button>
                         </div>
+                        <div class="mt-2 flex gap-2">
+                            <input type="text" id="admin-warning-input-${id}" class="w-full p-2 border border-gray-300 rounded-lg text-sm" placeholder="Custom warning...">
+                            <button class="bg-yellow-500 text-white font-semibold px-3 rounded-lg hover:bg-yellow-600 send-warning-btn" data-student-id="${id}">Send</button>
+                        </div>
                     </div>`;
+        }
+        
+        async function handleSendAdminWarning(studentId) {
+            const input = document.getElementById(`admin-warning-input-${studentId}`);
+            const message = input.value.trim();
+            if (!message) return;
+
+            try {
+                const studentDocRef = doc(db, "artifacts", appId, "public", "data", "student_status", studentId);
+                const docSnap = await getDoc(studentDocRef);
+                if (docSnap.exists()) {
+                    const currentViolations = docSnap.data().violations || 0;
+                    await setDoc(studentDocRef, {
+                        violations: currentViolations + 1,
+                        adminWarning: {
+                            message: message,
+                            timestamp: Date.now()
+                        }
+                    }, { merge: true });
+                    input.value = ''; // Clear input after sending
+                }
+            } catch (error) {
+                console.error("Error sending admin warning:", error);
+                handleFirebaseError(error, "handleSendAdminWarning");
+            }
+        }
+
+        function listenForAdminWarnings() {
+            const studentDocRef = doc(db, "artifacts", appId, "public", "data", "student_status", currentStudent.id);
+            onSnapshot(studentDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const warning = data.adminWarning;
+
+                    if (warning && warning.timestamp > lastWarningTimestamp) {
+                        lastWarningTimestamp = warning.timestamp;
+                        console.log("Received admin warning:", warning.message);
+                        
+                        violationCounter = data.violations;
+                        violationCounterEl.textContent = violationCounter;
+
+                        violationOverlay.dataset.violationType = 'admin';
+                        violationMessage.textContent = `Admin Warning: ${warning.message}`;
+                        violationCountMessage.textContent = `Violations: ${violationCounter} of ${MAX_VIOLATIONS}`;
+                        violationOverlay.classList.remove('hidden');
+
+                        setTimeout(() => {
+                            if (violationOverlay.dataset.violationType === 'admin') {
+                               resolveViolation('admin');
+                            }
+                        }, 5000); 
+
+                        if (violationCounter >= MAX_VIOLATIONS) {
+                            endExam(`Disqualified due to reaching ${MAX_VIOLATIONS} violations.`);
+                        }
+                    }
+                }
+            });
         }
 
         async function viewAnswers(studentId) {
@@ -1058,7 +1130,9 @@
 
             studentPeerConnection = new RTCPeerConnection(rtcConfig);
 
-            mediaStream.getTracks().forEach(track => studentPeerConnection.addTrack(track, mediaStream));
+            const videoStream = new MediaStream();
+            mediaStream.getVideoTracks().forEach(track => videoStream.addTrack(track, videoStream));
+            videoStream.getTracks().forEach(track => studentPeerConnection.addTrack(track, videoStream));
 
             studentPeerConnection.onicecandidate = event => {
                 if(event.candidate) {
