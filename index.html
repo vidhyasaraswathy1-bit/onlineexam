@@ -57,7 +57,6 @@
 <body class="flex items-center justify-center min-h-screen bg-gray-100">
 
     <div id="container" class="w-full max-w-6xl mx-auto p-4 md:p-8">
-        <!-- 0. Login Screen -->
         <div id="login-screen" class="p-8 bg-white rounded-2xl shadow-xl text-center">
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to the Examination Portal</h1>
             <p class="text-gray-600 mb-8">Please select your name to begin the exam.</p>
@@ -69,9 +68,11 @@
                     I am Sam (Class 10)
                 </button>
             </div>
+            <div class="mt-8 pt-4 border-t">
+                 <a href="#admin" class="text-gray-400 text-sm hover:text-gray-600">Admin Login</a>
+            </div>
         </div>
         
-        <!-- ADMIN: Login Screen -->
         <div id="admin-login-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl text-center max-w-md mx-auto">
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Admin Access</h1>
             <p class="text-gray-600 mb-6">Enter password to manage exam questions.</p>
@@ -80,7 +81,6 @@
             <p id="admin-login-error" class="text-red-500 mt-4 hidden">Incorrect password.</p>
         </div>
 
-        <!-- ADMIN: Panel -->
         <div id="admin-panel-screen" class="hidden p-8 bg-white rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
             <div class="flex border-b mb-6">
@@ -204,7 +204,7 @@
                         </div>
                         <p class="text-xs text-center mt-2 text-gray-400">Your webcam and microphone are being recorded.</p>
                          <div class="mt-2 text-center">
-                              <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 5</p>
+                             <p class="text-sm font-semibold text-yellow-400">Violations: <span id="violation-counter">0</span> / 5</p>
                          </div>
                     </div>
                      <div class="bg-gray-50 p-4 rounded-lg">
@@ -250,17 +250,16 @@
             </div>
         </div>
 
-        <!-- Firebase Error Modal -->
         <div id="firebase-error-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4">
             <div class="bg-white p-8 rounded-lg shadow-xl text-left max-w-lg">
                 <h3 class="text-xl font-bold text-red-600 mb-4">Database Connection Error</h3>
-                <p class="text-gray-700 mb-4">The application could not connect to the database due to a permissions issue.</p>
-                <p class="text-gray-700 mb-4"><strong>This is a common issue with test databases.</strong> The default security rules expire after 30 days.</p>
-                <p class="text-gray-700 font-semibold mb-2">How to fix it:</p>
+                <p class="text-gray-700 mb-4">The application could not connect to the database due to a permissions issue or missing configuration.</p>
+                <p class="text-gray-700 mb-4"><strong>Please ensure you have added your Firebase API keys to the code.</strong></p>
+                <p class="text-gray-700 font-semibold mb-2">Firestore Rules Fix:</p>
                 <ol class="list-decimal list-inside text-gray-600 space-y-2 bg-gray-50 p-4 rounded-md">
                     <li>Go to your Firebase project console.</li>
                     <li>Navigate to <strong class="text-gray-800">Firestore Database</strong> > <strong class="text-gray-800">Rules</strong> tab.</li>
-                    <li>Replace the existing code with: <br><code class="text-sm bg-gray-200 p-1 rounded">rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if request.auth != null; } } }</code></li>
+                    <li>Replace the existing code with: <br><code class="text-sm bg-gray-200 p-1 rounded">rules_version = '2'; service cloud.firestore { match /databases/{database}/documents { match /{document=**} { allow read, write: if true; } } }</code><br><em>(Note: For production, change 'if true' to 'if request.auth != null')</em></li>
                     <li>Click <strong class="text-gray-800">Publish</strong>.</li>
                 </ol>
                 <div class="mt-6 text-center">
@@ -269,7 +268,6 @@
             </div>
         </div>
         
-        <!-- Authentication Error Modal -->
         <div id="auth-error-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[200] p-4">
             <div class="bg-white p-8 rounded-lg shadow-xl text-left max-w-lg">
                 <h3 class="text-xl font-bold text-yellow-600 mb-4">Authentication Error</h3>
@@ -289,10 +287,8 @@
 
     </div>
     
-    <!-- End Screen Overlay -->
     <div id="end-screen-overlay" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"></div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         // Using latest Firebase v11+ SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -367,7 +363,10 @@
         const AUDIO_THRESHOLD = 75; 
         // SUSTAINED_NOISE_LIMIT: How many consecutive checks the sound must be loud. Higher = less sensitive.
         const SUSTAINED_NOISE_LIMIT = 3; 
-        const ADMIN_PASSWORD = "admin123";
+        
+        // SECURITY NOTE: In a real production app, this should not be hardcoded in the frontend.
+        const ADMIN_PASSWORD = "admin123"; 
+        
         let violationCounter = 0;
         let currentQuestionIndex = 0;
         let timerInterval, monitoringInterval;
@@ -399,23 +398,24 @@
                 if (typeof __firebase_config !== 'undefined') {
                     firebaseConfig = JSON.parse(__firebase_config);
                 } else {
-                    console.warn("Using fallback Firebase configuration.");
+                    // -------------------------------------------------------------------------
+                    // IMPORTANT: REPLACE THE VALUES BELOW WITH YOUR OWN FIREBASE CONFIGURATION
+                    // -------------------------------------------------------------------------
                     const fallbackConfig = {
-                        apiKey: "AIzaSyAusoeLoI3wmeD8zvhJ8w7CvNmDzYI_8kk",
-                        authDomain: "examportal-343d6.firebaseapp.com",
-                        projectId: "examportal-343d6",
-                        storageBucket: "examportal-343d6.firebasestorage.app",
-                        messagingSenderId: "958796242275",
-                        appId: "1:958796242275:web:c308cc8106842fa78a8756",
-                        measurementId: "G-5K1FZ0V88G"
+                        apiKey: "YOUR_API_KEY_HERE",
+                        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+                        projectId: "YOUR_PROJECT_ID",
+                        storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+                        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                        appId: "YOUR_APP_ID"
                     };
                     firebaseConfig = fallbackConfig;
                 }
 
-                if (!firebaseConfig || !firebaseConfig.apiKey) {
-                     document.body.innerHTML = `<div class="p-8 text-center"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"><strong class="font-bold">Configuration Error:</strong><span class="block sm:inline"> Firebase configuration is missing or incomplete.</span></div></div>`;
-                     console.error("FATAL ERROR: Firebase configuration is invalid.");
-                     return;
+                if (!firebaseConfig || firebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
+                      document.body.innerHTML = `<div class="p-8 text-center"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"><strong class="font-bold">Configuration Error:</strong><span class="block sm:inline"> Firebase configuration is missing. Please edit the HTML file and add your API keys.</span></div></div>`;
+                      console.error("FATAL ERROR: Firebase configuration is invalid.");
+                      return;
                 }
                 
                 const app = initializeApp(firebaseConfig);
